@@ -207,7 +207,7 @@ export function Settings() {
         <CardContent>
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>
-              <strong>Material Manager</strong> é um sistema de gerenciamento de materiais desenvolvido para projetos de
+              <strong>EasyStock</strong> é um sistema de gerenciamento de materiais desenvolvido para projetos de
               design de interiores.
             </p>
             <p>

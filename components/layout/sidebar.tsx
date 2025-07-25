@@ -35,7 +35,7 @@ export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOp
         )}
       >
         <div className="flex items-center justify-between p-4 border-b">
-          <h1 className="text-xl font-bold">Material Manager</h1>
+          <h1 className="text-xl font-bold">EasyStock</h1>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-4 w-4" />
           </Button>

@@ -11,6 +11,7 @@ interface MaterialStore {
   updateMaterial: (id: string, material: Partial<Material>) => void
   deleteMaterial: (id: string) => void
   addMovement: (movement: Omit<MovementRecord, "id" | "userId" | "userName" | "date">) => void
+  updateMaterialQuantity: (id: string, newQuantity: number) => void // <== adicionar essa linha
   clearAllData: () => void
   importData: (materials: Material[], movements: MovementRecord[]) => void
   initializeData: () => void
@@ -146,6 +147,27 @@ export const useMaterialStore = create<MaterialStore>()(
           ),
         }))
       },
+      
+      updateMaterialQuantity: (id: string, newQuantity: number) => {
+        set((state) => ({
+          materials: state.materials.map((material) => {
+            if (material.id !== id) return material
+      
+            const status =
+              newQuantity <= 0
+                ? "Sem Estoque"
+                : newQuantity <= material.minStock
+                ? "Estoque Baixo"
+                : "Em Estoque"
+      
+            return {
+              ...material,
+              quantity: Math.max(0, newQuantity),
+              status,
+            }
+          }),
+        }))
+      },
 
       deleteMaterial: (id) => {
         set((state) => ({
@@ -171,7 +193,7 @@ export const useMaterialStore = create<MaterialStore>()(
                   ? material.quantity + movement.quantity
                   : material.quantity - movement.quantity
 
-              const status =
+              const status: "Em Estoque" | "Estoque Baixo" | "Sem Estoque" =
                 newQuantity <= 0 ? "Sem Estoque" : newQuantity <= material.minStock ? "Estoque Baixo" : "Em Estoque"
 
               return {

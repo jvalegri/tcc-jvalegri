@@ -17,6 +17,7 @@ export function Movements() {
   const [searchTerm, setSearchTerm] = useState("")
   const [dateFilter, setDateFilter] = useState("")
 
+
   const filteredMovements = movements.filter((movement) => {
     const matchesSearch =
       movement.materialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
