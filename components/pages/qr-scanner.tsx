@@ -64,12 +64,11 @@ export function QRScanner() {
         cameraId,
         { fps: 10, qrbox: 250 },
         async (decodedText: string) => {
-          // Reinicia o scanner e limpa estado para permitir reescaneamento igual
           await scanner.stop()
           await scanner.clear()
           scannerRef.current = null
           setIsScanning(false)
-          setScannedCode("") // limpa antes de reusar
+          setScannedCode("")
           handleScanCode(decodedText)
         },
         () => {}
@@ -96,8 +95,6 @@ export function QRScanner() {
         : "O código QR não corresponde a nenhum material cadastrado.",
       variant: material ? "default" : "destructive",
     })
-    
-    
   }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,7 +105,6 @@ export function QRScanner() {
         .scanFile(file, true)
         .then((decodedText) => {
           handleScanCode(decodedText)
-          
           setTimeout(() => setScannedCode(""), 500)
         })
         .catch(() => {
@@ -270,9 +266,18 @@ export function QRScanner() {
                     ? oldQuantity + delta
                     : Math.max(0, oldQuantity - delta)
 
-                useMaterialStore
-                  .getState()
-                  .updateMaterialQuantity?.(foundMaterial.id, newQuantity)
+                const { updateMaterialQuantity, addMovement } = useMaterialStore.getState()
+                updateMaterialQuantity(foundMaterial.id, newQuantity)
+
+                addMovement({
+                  actionType: stockUpdate.type === "adicionar" ? "entrada" : "saída",
+                  materialId: foundMaterial.id,
+                  materialName: foundMaterial.name,
+                  materialCategory: foundMaterial.category,
+                  quantity: stockUpdate.quantity,
+                  location: "Depósito Central",
+                  justification: "Ajuste via QR Scanner",
+                })
 
                 toast({
                   title: "Estoque atualizado",
