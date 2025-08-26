@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Package, AlertTriangle, TrendingUp, Plus, QrCode, FileText } from "lucide-react"
 import { useMaterialStore } from "@/lib/stores/material-store"
+import Link from "next/link";
 
 export function Dashboard() {
   const { materials, movements } = useMaterialStore()
@@ -76,9 +77,11 @@ export function Dashboard() {
               <Plus className="h-6 w-6" />
               Adicionar Material
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col gap-2 bg-transparent">
-              <QrCode className="h-6 w-6" />
-              Escanear QR
+            <Button asChild variant="outline" className="h-20 flex flex-col gap-2 bg-transparent">
+              <Link href="/scanner" aria-label="Escanear QR">
+                <QrCode className="h-6 w-6" />
+                Escanear QR
+              </Link>
             </Button>
             <Button variant="outline" className="h-20 flex flex-col gap-2 bg-transparent">
               <FileText className="h-6 w-6" />
