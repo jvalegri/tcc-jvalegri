@@ -7,7 +7,7 @@ import { Dashboard } from "@/components/pages/dashboard"
 import { Materials } from "@/components/pages/materials"
 import { QRScanner } from "@/components/pages/qr-scanner"
 import { Movements } from "@/components/pages/movements"
-import { Settings } from "@/components/pages/settings"
+import { Profile } from "@/components/pages/profile"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { useMaterialStore } from "@/lib/stores/material-store"
@@ -20,7 +20,7 @@ type User = {
   id: string
   email: string
   name?: string
-  projects?: any[]
+  projects?: Project[]
 }
 
 type Project = {
@@ -63,9 +63,33 @@ export default function App() {
 
   const handleProjectSelected = async (projectId: string) => {
     if (projectId && user) {
+      console.log("Projeto selecionado:", projectId)
+      console.log("Projetos disponíveis:", user.projects)
+      
       // Encontrar o projeto selecionado
-      const project = user.projects?.find(p => p.id === projectId)
+      let project = user.projects?.find((p: Project) => p.id === projectId)
+      
+      // Se não encontrar no array local, buscar do banco
+      if (!project) {
+        try {
+          console.log("Projeto não encontrado localmente, buscando do banco...")
+          const response = await fetch(`/api/auth/projects?userId=${user.id}`)
+          if (response.ok) {
+            const projects = await response.json()
+            project = projects.find((p: Project) => p.id === projectId)
+            
+            // Atualizar o array local de projetos
+            if (project) {
+              setUser(prev => prev ? { ...prev, projects } : null)
+            }
+          }
+        } catch (error) {
+          console.error("Erro ao buscar projeto do banco:", error)
+        }
+      }
+      
       if (project) {
+        console.log("Projeto encontrado:", project)
         setSelectedProject(project)
         setCurrentProjectId(projectId)
         setCurrentUserId(user.id)
@@ -79,6 +103,9 @@ export default function App() {
         }
         
         setCurrentPage("dashboard")
+      } else {
+        console.error("Projeto não encontrado:", projectId)
+        setCurrentPage("projects")
       }
     } else {
       console.error("Projeto inválido ou usuário não autenticado")
@@ -172,9 +199,22 @@ export default function App() {
             </button>
           </div>
         )
-      case "settings":
+      case "profile":
         return user && selectedProject ? (
-          <Settings />
+          <Profile 
+            user={{
+              id: user.id,
+              name: user.name || "",
+              email: user.email,
+              role: "Usuário",
+              createdAt: new Date().toISOString(),
+              lastLogin: new Date().toISOString()
+            }}
+            onUpdateProfile={(updatedProfile: any) => {
+              // Atualizar dados do usuário local
+              setUser(prev => prev ? { ...prev, ...updatedProfile } : null)
+            }}
+          />
         ) : (
           <div className="text-center mt-12">
             <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
@@ -187,16 +227,14 @@ export default function App() {
           </div>
         )
       default:
-        return user && selectedProject ? (
-          <Dashboard setCurrentPage={setCurrentPage} />
-        ) : (
+        return (
           <div className="text-center mt-12">
-            <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
+            <p className="text-red-600">Página não encontrada</p>
             <button 
-              onClick={() => setCurrentPage("projects")} 
+              onClick={() => setCurrentPage("dashboard")} 
               className="mt-4 px-4 py-2 bg-primary text-white rounded"
             >
-              Selecionar Projeto
+              Voltar ao Dashboard
             </button>
           </div>
         )
@@ -228,8 +266,8 @@ export default function App() {
             </div>
           )}
         </div>
+        <Toaster />
       </TooltipProvider>
-      <Toaster />
     </ThemeProvider>
   )
 }

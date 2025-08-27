@@ -89,13 +89,21 @@ export default function ProjectSelection({ user, onSelectProject }: Props) {
         // Adicionar o novo projeto à lista
         setProjects(prev => [...prev, newProject])
         
-        // Selecionar o novo projeto
+        // IMPORTANTE: Selecionar o novo projeto ANTES de fechar o dialog
         setSelected(newProject.id)
         
         // Limpar formulário e fechar dialog
         setNewProjectName("")
         setNewProjectDescription("")
         setShowCreateDialog(false)
+        
+        // Aguardar um tick para garantir que o estado foi atualizado
+        setTimeout(() => {
+          // Verificar se o projeto foi selecionado corretamente
+          if (newProject.id) {
+            console.log("Projeto criado e selecionado:", newProject.id)
+          }
+        }, 0)
       } else {
         const errorData = await response.json()
         setError(errorData.message || "Erro ao criar projeto.")
@@ -104,6 +112,15 @@ export default function ProjectSelection({ user, onSelectProject }: Props) {
       setError("Erro ao conectar com o servidor.")
     } finally {
       setCreatingProject(false)
+    }
+  }
+
+  const handleContinue = () => {
+    if (selected) {
+      console.log("Continuando com projeto selecionado:", selected)
+      onSelectProject(selected)
+    } else {
+      console.log("Nenhum projeto selecionado")
     }
   }
 
@@ -181,12 +198,11 @@ export default function ProjectSelection({ user, onSelectProject }: Props) {
               
               <div className="flex justify-end">
                 <Button
-                  onClick={() => {
-                    if (selected) onSelectProject(selected)
-                  }}
+                  onClick={handleContinue}
                   disabled={!selected}
+                  className="min-w-[100px]"
                 >
-                  Continuar
+                  {selected ? "Continuar" : "Selecione um projeto"}
                 </Button>
               </div>
             </>

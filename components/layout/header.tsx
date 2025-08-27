@@ -9,12 +9,12 @@ interface HeaderProps {
   setSidebarOpen: (open: boolean) => void
 }
 
-const pageNames = {
+const pageNames: Record<string, string> = {
   dashboard: "Dashboard",
   materials: "Materiais",
   scanner: "Scanner QR",
   movements: "Movimentações",
-  settings: "Configurações",
+  profile: "Perfil",
 }
 
 export function Header({ currentPage, setSidebarOpen }: HeaderProps) {

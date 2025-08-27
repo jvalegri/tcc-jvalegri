@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    console.log('Buscando projetos para usuário:', userId)
+
     // Buscar projetos do usuário específico
     const projects = await prisma.project.findMany({
       where: {
@@ -26,6 +28,8 @@ export async function GET(request: NextRequest) {
         description: true
       }
     })
+
+    console.log(`Encontrados ${projects.length} projetos para usuário ${userId}`)
 
     return NextResponse.json(projects)
 
@@ -42,10 +46,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, description, userId } = await request.json()
+    const body = await request.json()
+    const { name, description, userId } = body
+
+    console.log('Tentativa de criar projeto:', { name, description, userId })
 
     // Validação dos campos obrigatórios
     if (!name || !userId) {
+      console.log('Campos obrigatórios faltando:', { name: !!name, userId: !!userId })
       return NextResponse.json(
         { message: 'Nome do projeto e ID do usuário são obrigatórios.' },
         { status: 400 }
@@ -58,11 +66,14 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
+      console.log('Usuário não encontrado:', userId)
       return NextResponse.json(
         { message: 'Usuário não encontrado.' },
         { status: 404 }
       )
     }
+
+    console.log('Usuário encontrado, criando projeto...')
 
     // Criar novo projeto
     const newProject = await prisma.project.create({
@@ -77,6 +88,8 @@ export async function POST(request: NextRequest) {
         description: true
       }
     })
+
+    console.log('Projeto criado com sucesso:', newProject)
 
     return NextResponse.json(newProject, { status: 201 })
 

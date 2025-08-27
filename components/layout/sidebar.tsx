@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Package, QrCode, History, Settings, X, LogOut } from "lucide-react"
+import { LayoutDashboard, Package, QrCode, History, X, LogOut, User } from "lucide-react"
 
 interface SidebarProps {
   currentPage: string
@@ -17,7 +17,6 @@ const navigation = [
   { id: "materials", name: "Materiais", icon: Package },
   { id: "scanner", name: "Scanner QR", icon: QrCode },
   { id: "movements", name: "Movimentações", icon: History },
-  { id: "settings", name: "Configurações", icon: Settings },
 ]
 
 export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOpen, onLogout }: SidebarProps) {
@@ -64,8 +63,20 @@ export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOp
           })}
         </nav>
 
-        {/* Logout Button - Fixed at bottom */}
-        <div className="p-4 border-t">
+        {/* Profile and Logout Buttons - Fixed at bottom */}
+        <div className="p-4 border-t space-y-2">
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => {
+              setCurrentPage("profile")
+              setSidebarOpen(false)
+            }}
+          >
+            <User className="mr-2 h-4 w-4" />
+            Perfil
+          </Button>
+          
           <Button
             variant="outline"
             className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"

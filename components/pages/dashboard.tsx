@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Package, AlertTriangle, TrendingUp, Plus, QrCode, FileText } from "lucide-react"
+import { Package, AlertTriangle, Plus, QrCode, FileText } from "lucide-react"
 import { useMaterialStore } from "@/lib/stores/material-store"
 import { useState } from "react"
 import {
@@ -29,23 +29,24 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
   const { materials, movements } = useMaterialStore()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
-  const totalMaterials = materials.length
+  const uniqueTypes = [...new Set(materials.map(m => m.category))].length
   const lowStockMaterials = materials.filter((m) => m.quantity <= m.minStock).length
   const recentMovements = movements.slice(0, 5)
-  const totalValue = materials.reduce((sum, m) => sum + m.price * m.quantity, 0)
 
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Materiais</CardTitle>
+            <CardTitle className="text-sm font-medium">Tipos de Materiais</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalMaterials}</div>
-            <p className="text-xs text-muted-foreground">+2 desde ontem</p>
+            <div className="text-2xl font-bold">{uniqueTypes}</div>
+            <p className="text-xs text-muted-foreground">
+              Tipos diferentes de materiais registrados
+            </p>
           </CardContent>
         </Card>
 
@@ -62,25 +63,12 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              R$ {totalValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-muted-foreground">Em estoque</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Movimentações</CardTitle>
             <FileText className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{movements.length}</div>
-            <p className="text-xs text-muted-foreground">Este mês</p>
+            <p className="text-xs text-muted-foreground">Total registradas</p>
           </CardContent>
         </Card>
       </div>
@@ -106,6 +94,7 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
                 <MaterialForm onSuccess={() => setIsAddDialogOpen(false)} />
               </DialogContent>
             </Dialog>
+
             <Button
               variant="outline"
               className="h-20 flex flex-col gap-2 bg-transparent"
@@ -114,6 +103,7 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
               <QrCode className="h-6 w-6" />
               Escanear QR
             </Button>
+
             <Button
               variant="outline"
               className="h-20 flex flex-col gap-2 bg-transparent"

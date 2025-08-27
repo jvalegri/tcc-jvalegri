@@ -7,7 +7,6 @@ import { Dashboard } from "@/components/pages/dashboard"
 import { Materials } from "@/components/pages/materials"
 import { QRScanner } from "@/components/pages/qr-scanner"
 import { Movements } from "@/components/pages/movements"
-import { Settings } from "@/components/pages/settings"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { useMaterialStore } from "@/lib/stores/material-store"
@@ -31,8 +30,6 @@ export default function App() {
         return <QRScanner />
       case "movements":
         return <Movements />
-      case "settings":
-        return <Settings />
       default:
         return <Dashboard setCurrentPage={setCurrentPage} />
     }
