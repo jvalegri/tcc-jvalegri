@@ -10,12 +10,47 @@ datasource db {
 }
 
 model User {
-  id            String  @id @default(auto()) @map("_id") @db.ObjectId
-  email         String  @unique
-  password      String
-  name          String?
-  cpf           String?
-  dataNasc      String?
-  profissao     String?
-  titulo        String?
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  email     String @unique
+  password  String
+  name      String?
+  cpf       String?
+  dataNasc  String?
+  profissao String?
+  titulo    String?
+  // Relacionamentos
+  movements MovementRecord[]
+}
+
+model Material {
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  category   String
+  supplier   String
+  quantity   Int
+  unit       String
+  price      Float
+  status     String
+  minStock   Int
+  notes      String?
+  // Relacionamento
+  movements  MovementRecord[]
+}
+
+model MovementRecord {
+  id                String @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String @db.ObjectId
+  materialId        String @db.ObjectId
+  userName          String
+  materialName      String
+  materialCategory  String
+  actionType        String
+  quantity          Int
+  date              DateTime
+  location          String
+  justification     String
+  
+  // Relacionamentos
+  user              User      @relation(fields: [userId], references: [id])
+  material          Material  @relation(fields: [materialId], references: [id])
 }
