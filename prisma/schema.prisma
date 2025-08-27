@@ -20,6 +20,7 @@ model User {
   titulo    String?
   // Relacionamentos
   movements MovementRecord[]
+  projects  Project[]
 }
 
 model Material {
@@ -41,6 +42,7 @@ model MovementRecord {
   id                String @id @default(auto()) @map("_id") @db.ObjectId
   userId            String @db.ObjectId
   materialId        String @db.ObjectId
+  projectId         String @db.ObjectId // Novo campo para o relacionamento com Project
   userName          String
   materialName      String
   materialCategory  String
@@ -53,4 +55,16 @@ model MovementRecord {
   // Relacionamentos
   user              User      @relation(fields: [userId], references: [id])
   material          Material  @relation(fields: [materialId], references: [id])
+  project           Project   @relation(fields: [projectId], references: [id])
+}
+
+// Novo modelo para Projects
+model Project {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  userId      String @db.ObjectId
+  // Relacionamentos
+  user        User @relation(fields: [userId], references: [id])
+  movements   MovementRecord[]
 }
