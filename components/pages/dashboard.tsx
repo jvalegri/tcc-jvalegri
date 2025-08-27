@@ -5,10 +5,23 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Package, AlertTriangle, TrendingUp, Plus, QrCode, FileText } from "lucide-react"
 import { useMaterialStore } from "@/lib/stores/material-store"
-import Link from "next/link";
+import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { MaterialForm } from "@/components/forms/material-form"
 
-export function Dashboard() {
+interface DashboardProps {
+  setCurrentPage: (page: string) => void
+}
+
+export function Dashboard({ setCurrentPage }: DashboardProps) {
   const { materials, movements } = useMaterialStore()
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   const totalMaterials = materials.length
   const lowStockMaterials = materials.filter((m) => m.quantity <= m.minStock).length
@@ -73,17 +86,33 @@ export function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="h-20 flex flex-col gap-2">
-              <Plus className="h-6 w-6" />
-              Adicionar Material
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="h-20 flex flex-col gap-2">
+                  <Plus className="h-6 w-6" />
+                  Adicionar Material
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Adicionar Novo Material</DialogTitle>
+                </DialogHeader>
+                <MaterialForm onSuccess={() => setIsAddDialogOpen(false)} />
+              </DialogContent>
+            </Dialog>
+            <Button
+              variant="outline"
+              className="h-20 flex flex-col gap-2 bg-transparent"
+              onClick={() => setCurrentPage("scanner")}
+            >
+              <QrCode className="h-6 w-6" />
+              Escanear QR
             </Button>
-            <Button asChild variant="outline" className="h-20 flex flex-col gap-2 bg-transparent">
-              <Link href="/scanner" aria-label="Escanear QR">
-                <QrCode className="h-6 w-6" />
-                Escanear QR
-              </Link>
-            </Button>
-            <Button variant="outline" className="h-20 flex flex-col gap-2 bg-transparent">
+            <Button
+              variant="outline"
+              className="h-20 flex flex-col gap-2 bg-transparent"
+              onClick={() => setCurrentPage("movements")}
+            >
               <FileText className="h-6 w-6" />
               Relatórios
             </Button>
