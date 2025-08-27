@@ -21,8 +21,11 @@ model Material {
   name            String
   description     String?
   type            String?
-  currentQuantity Int
+  currentQuantity Float            // Mudando para Float para suportar decimais
   unit            String
+  price           Float            @default(0)  // Novo campo para preço
+  supplier        String?          // Novo campo para fornecedor
+  minStock        Float            @default(5)  // Novo campo para estoque mínimo
   isConsumable    Boolean          @default(false)
   movementRecords MovementRecord[]
 
@@ -42,7 +45,7 @@ model Project {
 
 model MovementRecord {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  quantity        Int
+  quantity        Float    // Mudando para Float para suportar decimais
   timestamp       DateTime @default(now())
   type            String   // 'entry' or 'exit'
   userId          String   @db.ObjectId

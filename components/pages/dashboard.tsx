@@ -141,7 +141,7 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
                   .map((material) => (
                     <Tooltip key={material.id}>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 cursor-help transition-colors">
                           <div>
                             <p className="font-medium">{material.name}</p>
                             <p className="text-sm text-muted-foreground">{material.category}</p>
@@ -151,10 +151,47 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
                           </Badge>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          Qtde: {material.quantity} | Estoque mínimo: {material.minStock}
-                        </p>
+                      <TooltipContent className="max-w-xs p-3">
+                        <div className="space-y-2">
+                          <div className="font-semibold text-amber-700 dark:text-amber-300">
+                            ⚠️ Estoque Baixo
+                          </div>
+                          <div className="text-sm space-y-1">
+                            <div className="flex justify-between">
+                              <span className="font-medium">Material:</span>
+                              <span>{material.name}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium">Quantidade Atual:</span>
+                              <span className="text-red-600 font-semibold">
+                                {material.quantity} {material.unit}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium">Estoque Mínimo:</span>
+                              <span className="text-amber-600 font-semibold">
+                                {material.minStock} {material.unit}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium">Deficit:</span>
+                              <span className="text-red-600 font-semibold">
+                                {Math.max(0, material.minStock - material.quantity)} {material.unit}
+                              </span>
+                            </div>
+                            {material.price > 0 && (
+                              <div className="flex justify-between">
+                                <span className="font-medium">Preço Unitário:</span>
+                                <span className="text-green-600 font-semibold">
+                                  R$ {material.price.toFixed(2)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground pt-1 border-t">
+                            Considere fazer um novo pedido
+                          </div>
+                        </div>
                       </TooltipContent>
                     </Tooltip>
                   ))}

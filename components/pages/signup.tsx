@@ -1,73 +1,173 @@
 import React, { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
 
 type Props = {
-  onSignup: (user: { email: string; name?: string }) => void
+  onSignup: (user: { id: string; email: string; name?: string; projects?: any[] }) => void
   goToLogin: () => void
 }
 
 export default function Signup({ onSignup, goToLogin }: Props) {
-  const [nome, setNome] = useState("")
-  const [cpf, setCpf] = useState("")
-  const [dataNasc, setDataNasc] = useState("")
-  const [profissao, setProfissao] = useState("")
-  const [titulo, setTitulo] = useState("")
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
-  const [senha, setSenha] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!nome || !cpf || !dataNasc || !email || !senha) {
-      setError("Preencha os campos obrigatórios.")
-      return
+    setLoading(true)
+
+    try {
+      // Validação básica no frontend
+      if (!name.trim() || !email.trim() || !password.trim()) {
+        setError("Por favor, preencha todos os campos obrigatórios.")
+        setLoading(false)
+        return
+      }
+
+      if (password !== confirmPassword) {
+        setError("As senhas não coincidem.")
+        setLoading(false)
+        return
+      }
+
+      if (password.length < 6) {
+        setError("A senha deve ter pelo menos 6 caracteres.")
+        setLoading(false)
+        return
+      }
+
+      // Chamada para a API de cadastro
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          name: name.trim(), 
+          email: email.trim(), 
+          password 
+        }),
+      })
+
+      if (response.ok) {
+        const user = await response.json()
+        
+        // Verificar se o usuário tem dados válidos
+        if (user && user.id && user.email) {
+          onSignup(user)
+        } else {
+          setError("Resposta inválida do servidor.")
+        }
+      } else {
+        const errorData = await response.json()
+        setError(errorData.message || "Erro ao criar conta.")
+      }
+    } catch (err) {
+      setError("Não foi possível conectar ao servidor. Tente novamente.")
+    } finally {
+      setLoading(false)
     }
-    // simular cadastro bem-sucedido
-    onSignup({ email, name: nome })
   }
 
   return (
-    <div className="max-w-md mx-auto mt-8 bg-white dark:bg-slate-800 p-6 rounded shadow">
-      <h2 className="text-2xl mb-4">Cadastro</h2>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-sm">Nome</label>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm">CPF</label>
-          <input value={cpf} onChange={(e) => setCpf(e.target.value)} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm">Data de Nasc</label>
-          <input type="date" value={dataNasc} onChange={(e) => setDataNasc(e.target.value)} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm">Profissão</label>
-          <input value={profissao} onChange={(e) => setProfissao(e.target.value)} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm">Título</label>
-          <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm">Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-sm">Senha</label>
-          <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} className="w-full border rounded px-3 py-2" />
-        </div>
-        {error && <div className="text-red-600">{error}</div>}
-        <div className="flex items-center justify-between mt-2">
-          <button type="submit" className="px-4 py-2 bg-primary text-white rounded">
-            Cadastrar
-          </button>
-          <button type="button" onClick={goToLogin} className="text-sm underline">
-            Voltar ao login
-          </button>
-        </div>
-      </form>
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center">Criar Conta</CardTitle>
+          <CardDescription className="text-center">
+            Preencha os dados para criar sua conta
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome *</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                placeholder="Seu nome completo"
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                placeholder="seu@email.com"
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha *</Label>
+              <Input
+                id="password"
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                placeholder="Mínimo 6 caracteres"
+                required
+                disabled={loading}
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirmar Senha *</Label>
+              <Input
+                id="confirm-password"
+                type="password" 
+                value={confirmPassword} 
+                onChange={(e) => setConfirmPassword(e.target.value)} 
+                placeholder="Confirme sua senha"
+                required
+                disabled={loading}
+                minLength={6}
+              />
+            </div>
+            {error && (
+              <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                {error}
+              </div>
+            )}
+            <div className="space-y-3">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Criando conta...
+                  </>
+                ) : (
+                  "Criar Conta"
+                )}
+              </Button>
+              <div className="text-center">
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={goToLogin}
+                  disabled={loading}
+                  className="text-sm"
+                >
+                  Já tem uma conta? Faça login
+                </Button>
+              </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

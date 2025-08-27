@@ -2,13 +2,14 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Package, QrCode, History, Settings, X } from "lucide-react"
+import { LayoutDashboard, Package, QrCode, History, Settings, X, LogOut } from "lucide-react"
 
 interface SidebarProps {
   currentPage: string
   setCurrentPage: (page: string) => void
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
+  onLogout: () => void
 }
 
 const navigation = [
@@ -19,7 +20,7 @@ const navigation = [
   { id: "settings", name: "Configurações", icon: Settings },
 ]
 
-export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOpen }: SidebarProps) {
+export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOpen, onLogout }: SidebarProps) {
   return (
     <>
       {/* Mobile overlay */}
@@ -30,10 +31,11 @@ export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOp
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 flex flex-col",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
+        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h1 className="text-xl font-bold">EasyStock</h1>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(false)}>
@@ -41,7 +43,8 @@ export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOp
           </Button>
         </div>
 
-        <nav className="p-4 space-y-2">
+        {/* Navigation */}
+        <nav className="p-4 space-y-2 flex-1">
           {navigation.map((item) => {
             const Icon = item.icon
             return (
@@ -60,6 +63,18 @@ export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOp
             )
           })}
         </nav>
+
+        {/* Logout Button - Fixed at bottom */}
+        <div className="p-4 border-t">
+          <Button
+            variant="outline"
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={onLogout}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sair
+          </Button>
+        </div>
       </div>
     </>
   )

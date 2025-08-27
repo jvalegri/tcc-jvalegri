@@ -17,17 +17,17 @@ interface MaterialFormProps {
 }
 
 export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
-  const { addMaterial, updateMaterial } = useMaterialStore()
+  const { addMaterial, updateMaterial, currentProjectId } = useMaterialStore()
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
     name: material?.name || "",
     category: material?.category || "",
     supplier: material?.supplier || "",
-    quantity: material?.quantity || 0,
+    quantity: material?.quantity || "",
     unit: material?.unit || "un",
-    price: material?.price || 0,
-    minStock: material?.minStock || 5,
+    price: material?.price || "",
+    minStock: material?.minStock || "",
     notes: material?.notes || "",
   })
 
@@ -45,52 +45,99 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
     if (!formData.supplier.trim()) {
       newErrors.supplier = "Fornecedor é obrigatório"
     }
-    if (formData.quantity < 0) {
-      newErrors.quantity = "Quantidade deve ser positiva"
+    
+    // Validação da quantidade
+    const quantityValue = parseFloat(formData.quantity.toString())
+    if (isNaN(quantityValue) || quantityValue < 0) {
+      newErrors.quantity = "Quantidade deve ser um número positivo"
     }
-    if (formData.price < 0) {
-      newErrors.price = "Preço deve ser positivo"
+    
+    // Validação do preço
+    const priceValue = parseFloat(formData.price.toString())
+    if (isNaN(priceValue) || priceValue < 0) {
+      newErrors.price = "Preço deve ser um número positivo"
     }
-    if (formData.minStock < 0) {
-      newErrors.minStock = "Estoque mínimo deve ser positivo"
+    
+    // Validação do estoque mínimo
+    const minStockValue = parseFloat(formData.minStock.toString())
+    if (isNaN(minStockValue) || minStockValue < 0) {
+      newErrors.minStock = "Estoque mínimo deve ser um número positivo"
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) {
       return
     }
 
-    const materialData = {
-      ...formData,
-      status:
-        formData.quantity <= formData.minStock
-          ? formData.quantity === 0
-            ? "Sem Estoque"
-            : "Estoque Baixo"
-          : "Em Estoque",
-    } as const
-
-    if (material) {
-      updateMaterial(material.id, materialData)
+    if (!currentProjectId) {
       toast({
-        title: "Material atualizado",
-        description: "Material foi atualizado com sucesso!",
+        title: "Erro",
+        description: "Nenhum projeto selecionado. Selecione um projeto primeiro.",
+        variant: "destructive"
       })
-    } else {
-      addMaterial(materialData)
-      toast({
-        title: "Material adicionado",
-        description: "Novo material foi cadastrado com sucesso!",
-      })
+      return
     }
 
-    onSuccess()
+    try {
+      if (material) {
+        // Edição de material existente
+        const updatedMaterial = {
+          name: formData.name,
+          category: formData.category,
+          supplier: formData.supplier,
+          quantity: parseFloat(formData.quantity.toString()) || 0,
+          unit: formData.unit,
+          price: parseFloat(formData.price.toString()) || 0,
+          minStock: parseFloat(formData.minStock.toString()) || 0,
+          notes: formData.notes,
+          status: parseFloat(formData.quantity.toString()) <= parseFloat(formData.minStock.toString())
+            ? parseFloat(formData.quantity.toString()) === 0
+              ? "Sem Estoque"
+              : "Estoque Baixo"
+            : "Em Estoque",
+        }
+
+        await updateMaterial(material.id, updatedMaterial)
+        toast({
+          title: "Material atualizado",
+          description: "Material foi atualizado com sucesso!",
+        })
+      } else {
+        // Criação de novo material
+        const apiMaterialData = {
+          name: formData.name,
+          description: formData.notes,
+          type: formData.category,
+          currentQuantity: parseFloat(formData.quantity.toString()) || 0,
+          unit: formData.unit,
+          price: parseFloat(formData.price.toString()) || 0,
+          supplier: formData.supplier,
+          minStock: parseFloat(formData.minStock.toString()) || 0,
+          isConsumable: false,
+          projectId: currentProjectId
+        }
+
+        await addMaterial(apiMaterialData, currentProjectId)
+        toast({
+          title: "Material adicionado",
+          description: "Novo material foi cadastrado com sucesso!",
+        })
+      }
+
+      onSuccess()
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar material. Tente novamente.",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleChange = (field: string, value: string | number) => {
@@ -98,6 +145,20 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
+  }
+
+  // Função genérica para validar campos numéricos
+  const handleNumericChange = (field: string, value: string) => {
+    // Permitir campo vazio ou apenas números e vírgula/ponto
+    if (value === "" || /^[0-9]*[.,]?[0-9]*$/.test(value)) {
+      handleChange(field, value)
+    }
+  }
+
+  // Função genérica para formatar exibição de campos numéricos
+  const formatNumericForDisplay = (value: string | number) => {
+    if (value === "" || value === 0) return ""
+    return value.toString()
   }
 
   return (
@@ -140,12 +201,16 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
           <Label htmlFor="quantity">Quantidade *</Label>
           <Input
             id="quantity"
-            type="number"
-            min="0"
-            value={formData.quantity}
-            onChange={(e) => handleChange("quantity", Number.parseInt(e.target.value) || 0)}
+            type="text"
+            value={formatNumericForDisplay(formData.quantity)}
+            onChange={(e) => handleNumericChange("quantity", e.target.value)}
+            placeholder="0"
+            className="font-mono"
           />
           {errors.quantity && <p className="text-sm text-red-500 mt-1">{errors.quantity}</p>}
+          <p className="text-xs text-muted-foreground mt-1">
+            Digite apenas números. Use vírgula ou ponto para decimais (ex: 3,5 ou 2.4)
+          </p>
         </div>
 
         <div>
@@ -159,10 +224,16 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
             <option value="un">Unidade</option>
             <option value="m²">Metro Quadrado</option>
             <option value="m">Metro</option>
+            <option value="cm">Centímetro</option>
+            <option value="mm">Milímetro</option>
             <option value="kg">Quilograma</option>
+            <option value="g">Grama</option>
             <option value="l">Litro</option>
+            <option value="ml">Mililitro</option>
             <option value="cx">Caixa</option>
             <option value="pç">Peça</option>
+            <option value="rol">Rolo</option>
+            <option value="pct">Pacote</option>
           </select>
         </div>
 
@@ -170,25 +241,32 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
           <Label htmlFor="price">Preço (R$) *</Label>
           <Input
             id="price"
-            type="number"
-            min="0"
-            step="0.01"
-            value={formData.price}
-            onChange={(e) => handleChange("price", Number.parseFloat(e.target.value) || 0)}
+            type="text"
+            value={formatNumericForDisplay(formData.price)}
+            onChange={(e) => handleNumericChange("price", e.target.value)}
+            placeholder="0,00"
+            className="font-mono"
           />
           {errors.price && <p className="text-sm text-red-500 mt-1">{errors.price}</p>}
+          <p className="text-xs text-muted-foreground mt-1">
+            Digite apenas números e use vírgula ou ponto para decimais
+          </p>
         </div>
 
         <div>
           <Label htmlFor="minStock">Estoque Mínimo *</Label>
           <Input
             id="minStock"
-            type="number"
-            min="0"
-            value={formData.minStock}
-            onChange={(e) => handleChange("minStock", Number.parseInt(e.target.value) || 0)}
+            type="text"
+            value={formatNumericForDisplay(formData.minStock)}
+            onChange={(e) => handleNumericChange("minStock", e.target.value)}
+            placeholder="0"
+            className="font-mono"
           />
           {errors.minStock && <p className="text-sm text-red-500 mt-1">{errors.minStock}</p>}
+          <p className="text-xs text-muted-foreground mt-1">
+            Digite apenas números. Use vírgula ou ponto para decimais
+          </p>
         </div>
       </div>
 
@@ -203,8 +281,16 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
         />
       </div>
 
+      {!currentProjectId && (
+        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+          <p className="text-sm text-yellow-800">
+            ⚠️ Nenhum projeto selecionado. Selecione um projeto para adicionar materiais.
+          </p>
+        </div>
+      )}
+
       <div className="flex gap-2 pt-4">
-        <Button type="submit" className="flex-1">
+        <Button type="submit" className="flex-1" disabled={!currentProjectId}>
           {material ? "Atualizar" : "Cadastrar"} Material
         </Button>
       </div>

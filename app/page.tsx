@@ -16,29 +16,84 @@ import Signup from "@/components/pages/signup"
 import ProjectSelection from "@/components/pages/project-selection"
 import Login from "@/components/pages/login"
 
+type User = {
+  id: string
+  email: string
+  name?: string
+  projects?: any[]
+}
+
+type Project = {
+  id: string
+  name: string
+  description?: string
+}
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState("login")
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { initializeData } = useMaterialStore()
-  const [user, setUser] = useState<{ email: string; name?: string } | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  
+  const { fetchMaterials, fetchMovements, setCurrentProjectId, clearData, setCurrentUserId } = useMaterialStore()
 
-  useEffect(() => {
-    initializeData()
-  }, [initializeData])
-
-  const handleLogin = (userData: { email: string; name?: string }) => {
-    setUser(userData)
-    setCurrentPage("projects")
+  const handleLogin = (userData: User) => {
+    // Validar se o usuário tem dados válidos
+    if (userData && userData.id && userData.email) {
+      setUser(userData)
+      setCurrentPage("projects")
+    } else {
+      console.error("Dados de usuário inválidos:", userData)
+      // Voltar para a página de login em caso de dados inválidos
+      setCurrentPage("login")
+    }
   }
 
-  const handleSignup = (userData: { email: string; name?: string }) => {
-    setUser(userData)
-    setCurrentPage("projects")
+  const handleSignup = (userData: User) => {
+    // Validar se o usuário tem dados válidos
+    if (userData && userData.id && userData.email) {
+      setUser(userData)
+      setCurrentPage("projects")
+    } else {
+      console.error("Dados de usuário inválidos:", userData)
+      // Voltar para a página de login em caso de dados inválidos
+      setCurrentPage("login")
+    }
   }
 
-  const handleProjectSelected = (projectId: string) => {
-    setCurrentPage("dashboard")
+  const handleProjectSelected = async (projectId: string) => {
+    if (projectId && user) {
+      // Encontrar o projeto selecionado
+      const project = user.projects?.find(p => p.id === projectId)
+      if (project) {
+        setSelectedProject(project)
+        setCurrentProjectId(projectId)
+        setCurrentUserId(user.id)
+        
+        // Carregar dados do projeto do banco de dados
+        try {
+          await fetchMaterials(projectId)
+          await fetchMovements(projectId)
+        } catch (error) {
+          console.error("Erro ao carregar dados do projeto:", error)
+        }
+        
+        setCurrentPage("dashboard")
+      }
+    } else {
+      console.error("Projeto inválido ou usuário não autenticado")
+      setCurrentPage("projects")
+    }
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+    setSelectedProject(null)
+    setCurrentPage("login")
+    setSidebarOpen(false)
+    
+    // Limpar dados do store
+    clearData()
   }
 
   const renderPage = () => {
@@ -48,19 +103,103 @@ export default function App() {
       case "signup":
         return <Signup onSignup={handleSignup} goToLogin={() => setCurrentPage("login")} />
       case "projects":
-        return <ProjectSelection user={user} onSelectProject={handleProjectSelected} />
+        return user ? (
+          <ProjectSelection user={user} onSelectProject={handleProjectSelected} />
+        ) : (
+          <div className="text-center mt-12">
+            <p className="text-red-600">Usuário não autenticado</p>
+            <button 
+              onClick={() => setCurrentPage("login")} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Voltar ao Login
+            </button>
+          </div>
+        )
       case "dashboard":
-        return <Dashboard setCurrentPage={setCurrentPage} />
+        return user && selectedProject ? (
+          <Dashboard setCurrentPage={setCurrentPage} />
+        ) : (
+          <div className="text-center mt-12">
+            <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
+            <button 
+              onClick={() => setCurrentPage("projects")} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Selecionar Projeto
+            </button>
+          </div>
+        )
       case "materials":
-        return <Materials />
+        return user && selectedProject ? (
+          <Materials />
+        ) : (
+          <div className="text-center mt-12">
+            <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
+            <button 
+              onClick={() => setCurrentPage("projects")} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Selecionar Projeto
+            </button>
+          </div>
+        )
       case "scanner":
-        return <QRScanner />
+        return user && selectedProject ? (
+          <QRScanner />
+        ) : (
+          <div className="text-center mt-12">
+            <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
+            <button 
+              onClick={() => setCurrentPage("projects")} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Selecionar Projeto
+            </button>
+          </div>
+        )
       case "movements":
-        return <Movements />
+        return user && selectedProject ? (
+          <Movements />
+        ) : (
+          <div className="text-center mt-12">
+            <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
+            <button 
+              onClick={() => setCurrentPage("projects")} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Selecionar Projeto
+            </button>
+          </div>
+        )
       case "settings":
-        return <Settings />
+        return user && selectedProject ? (
+          <Settings />
+        ) : (
+          <div className="text-center mt-12">
+            <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
+            <button 
+              onClick={() => setCurrentPage("projects")} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Selecionar Projeto
+            </button>
+          </div>
+        )
       default:
-        return <Dashboard setCurrentPage={setCurrentPage} />
+        return user && selectedProject ? (
+          <Dashboard setCurrentPage={setCurrentPage} />
+        ) : (
+          <div className="text-center mt-12">
+            <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
+            <button 
+              onClick={() => setCurrentPage("projects")} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Selecionar Projeto
+            </button>
+          </div>
+        )
     }
   }
 
@@ -68,13 +207,14 @@ export default function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <TooltipProvider>
         <div className="flex h-screen bg-background">
-          {user && currentPage !== "login" && currentPage !== "signup" && currentPage !== "projects" ? (
+          {user && selectedProject && currentPage !== "login" && currentPage !== "signup" && currentPage !== "projects" ? (
             <>
               <Sidebar
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
+                onLogout={handleLogout}
               />
 
               <div className="flex-1 flex flex-col overflow-hidden">

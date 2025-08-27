@@ -6,24 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Camera, Upload } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useMaterialStore } from "@/lib/stores/material-store"
 import { useToast } from "@/hooks/use-toast"
 import { Html5Qrcode } from "html5-qrcode"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import type { Material } from "@/lib/types"
 
 export function QRScanner() {
   const [scannedCode, setScannedCode] = useState("")
   const [isScanning, setIsScanning] = useState(false)
-  const [foundMaterial, setFoundMaterial] = useState<any>(null)
+  const [foundMaterial, setFoundMaterial] = useState<Material | null>(null)
   const [stockUpdate, setStockUpdate] = useState({
     type: "adicionar" as "adicionar" | "remover",
-    quantity: 1,
+    quantity: "",
   })
 
   const scannerRef = useRef<Html5Qrcode | null>(null)
@@ -114,6 +109,84 @@ export function QRScanner() {
             variant: "destructive",
           })
         })
+    }
+  }
+
+  const handleQuantityChange = (value: string) => {
+    // Permitir campo vazio ou apenas números e vírgula/ponto
+    if (value === "" || /^[0-9]*[.,]?[0-9]*$/.test(value)) {
+      setStockUpdate(prev => ({ ...prev, quantity: value }))
+    }
+  }
+
+  const formatQuantityForDisplay = (value: string | number) => {
+    if (value === "" || value === 0) return ""
+    return value.toString()
+  }
+
+  const handleStockUpdate = async () => {
+    if (!foundMaterial) return
+
+    // Validar quantidade
+    const quantityValue = parseFloat(stockUpdate.quantity.toString())
+    if (isNaN(quantityValue) || quantityValue <= 0) {
+      toast({
+        title: "Erro",
+        description: "Quantidade deve ser um número positivo maior que zero.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const delta = quantityValue
+      const oldQuantity = foundMaterial.quantity
+      const newQuantity =
+        stockUpdate.type === "adicionar"
+          ? oldQuantity + delta
+          : Math.max(0, oldQuantity - delta)
+
+      const { addMovement, currentProjectId, currentUserId } = useMaterialStore.getState()
+      
+      if (!currentProjectId || !currentUserId) {
+        toast({
+          title: "Erro",
+          description: "Projeto ou usuário não selecionado. Faça login novamente.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // CORRIGIDO: Não chamar updateMaterialQuantity aqui para evitar dupla atualização
+      // O store fará a atualização automaticamente ao processar a movimentação
+
+      // Adicionar movimentação no banco - CORRIGIDO: usando 'type' em vez de 'actionType' e 'materialCategory' em vez de 'materialType'
+      await addMovement({
+        type: stockUpdate.type === "adicionar" ? "entrada" : "saída",
+        materialId: foundMaterial.id,
+        materialName: foundMaterial.name,
+        materialCategory: foundMaterial.category,
+        quantity: quantityValue,
+        location: "Depósito Central",
+        justification: "Ajuste via QR Scanner",
+      }, currentProjectId, currentUserId)
+
+      toast({
+        title: "Estoque atualizado",
+        description: `Novo estoque: ${newQuantity} ${foundMaterial.unit}`,
+      })
+
+      setFoundMaterial(null)
+      setScannedCode("")
+      setIsScanning(false)
+      setStockUpdate(prev => ({ ...prev, quantity: "" }))
+    } catch (error) {
+      console.error("Erro ao atualizar estoque:", error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o estoque. Tente novamente.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -208,6 +281,7 @@ export function QRScanner() {
           if (!open) {
             setFoundMaterial(null)
             setScannedCode("")
+            setStockUpdate(prev => ({ ...prev, quantity: "" }))
           }
         }}
       >
@@ -238,19 +312,18 @@ export function QRScanner() {
                 </div>
 
                 <div>
-                  <Label htmlFor="stockQuantity">Quantidade</Label>
+                  <Label htmlFor="stockQuantity">Quantidade *</Label>
                   <Input
                     id="stockQuantity"
-                    type="number"
-                    min="1"
-                    value={stockUpdate.quantity}
-                    onChange={(e) =>
-                      setStockUpdate((prev) => ({
-                        ...prev,
-                        quantity: Number.parseInt(e.target.value) || 1,
-                      }))
-                    }
+                    type="text"
+                    value={formatQuantityForDisplay(stockUpdate.quantity)}
+                    onChange={(e) => handleQuantityChange(e.target.value)}
+                    placeholder="0"
+                    className="font-mono"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Digite apenas números. Use vírgula ou ponto para decimais
+                  </p>
                 </div>
               </div>
             </div>
@@ -258,37 +331,9 @@ export function QRScanner() {
 
           <DialogFooter>
             <Button
-              onClick={() => {
-                const delta = stockUpdate.quantity
-                const oldQuantity = foundMaterial.quantity
-                const newQuantity =
-                  stockUpdate.type === "adicionar"
-                    ? oldQuantity + delta
-                    : Math.max(0, oldQuantity - delta)
-
-                const { updateMaterialQuantity, addMovement } = useMaterialStore.getState()
-                updateMaterialQuantity(foundMaterial.id, newQuantity)
-
-                addMovement({
-                  actionType: stockUpdate.type === "adicionar" ? "entrada" : "saída",
-                  materialId: foundMaterial.id,
-                  materialName: foundMaterial.name,
-                  materialCategory: foundMaterial.category,
-                  quantity: stockUpdate.quantity,
-                  location: "Depósito Central",
-                  justification: "Ajuste via QR Scanner",
-                })
-
-                toast({
-                  title: "Estoque atualizado",
-                  description: `Novo estoque: ${newQuantity} ${foundMaterial.unit}`,
-                })
-
-                setFoundMaterial(null)
-                setScannedCode("")
-                setIsScanning(false)
-              }}
+              onClick={handleStockUpdate}
               className="w-full"
+              disabled={!stockUpdate.quantity || parseFloat(stockUpdate.quantity.toString()) <= 0}
             >
               Atualizar Estoque
             </Button>
