@@ -11,6 +11,7 @@ import { Settings } from "@/components/pages/settings"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { useMaterialStore } from "@/lib/stores/material-store"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard")
@@ -24,7 +25,7 @@ export default function App() {
   const renderPage = () => {
     switch (currentPage) {
       case "dashboard":
-        return <Dashboard />
+        return <Dashboard setCurrentPage={setCurrentPage} />
       case "materials":
         return <Materials />
       case "scanner":
@@ -34,26 +35,27 @@ export default function App() {
       case "settings":
         return <Settings />
       default:
-        return <Dashboard />
+        return <Dashboard setCurrentPage={setCurrentPage} />
     }
   }
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <div className="flex h-screen bg-background">
-        <Sidebar
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
+      <TooltipProvider>
+        <div className="flex h-screen bg-background">
+          <Sidebar
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header currentPage={currentPage} setSidebarOpen={setSidebarOpen} />
-
-          <main className="flex-1 overflow-auto p-4 md:p-6">{renderPage()}</main>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Header currentPage={currentPage} setSidebarOpen={setSidebarOpen} />
+            <main className="flex-1 overflow-auto p-4 md:p-6">{renderPage()}</main>
+          </div>
         </div>
-      </div>
+      </TooltipProvider>
       <Toaster />
     </ThemeProvider>
   )

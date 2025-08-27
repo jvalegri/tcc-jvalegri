@@ -14,6 +14,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { MaterialForm } from "@/components/forms/material-form"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface DashboardProps {
   setCurrentPage: (page: string) => void
@@ -128,20 +134,31 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {materials
-                .filter((m) => m.quantity <= m.minStock)
-                .slice(0, 5)
-                .map((material) => (
-                  <div key={material.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{material.name}</p>
-                      <p className="text-sm text-muted-foreground">{material.category}</p>
-                    </div>
-                    <Badge variant="destructive">
-                      {material.quantity} {material.unit}
-                    </Badge>
-                  </div>
-                ))}
+              <TooltipProvider>
+                {materials
+                  .filter((m) => m.quantity <= m.minStock)
+                  .slice(0, 5)
+                  .map((material) => (
+                    <Tooltip key={material.id}>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{material.name}</p>
+                            <p className="text-sm text-muted-foreground">{material.category}</p>
+                          </div>
+                          <Badge variant="destructive">
+                            {material.quantity} {material.unit}
+                          </Badge>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          Qtde: {material.quantity} | Estoque mínimo: {material.minStock}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+              </TooltipProvider>
               {materials.filter((m) => m.quantity <= m.minStock).length === 0 && (
                 <p className="text-muted-foreground text-center py-4">Nenhum material com estoque baixo</p>
               )}
