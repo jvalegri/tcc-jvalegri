@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 
 type Props = {
-  onLogin: (user: { email: string; name?: string }) => void
+  onLogin: (user: { email: string; name?: string; projects?: any[] }) => void
   goToSignup: () => void
 }
 
@@ -9,17 +9,39 @@ export default function Login({ onLogin, goToSignup }: Props) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    // validação simples (substituir por chamada ao backend)
-    if (!email || !password) {
-      setError("Preencha email e senha.")
-      return
+    setLoading(true)
+
+    try {
+      // Faz uma chamada real para um endpoint de API para validar as credenciais
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      // Verifica se a resposta do backend foi bem-sucedida
+      if (response.ok) {
+        const user = await response.json()
+        // Chama onLogin somente se o login for bem-sucedido
+        onLogin(user)
+      } else {
+        // Se a resposta for um erro (e.g., 401 Unauthorized), exibe a mensagem do backend
+        const errorData = await response.json()
+        setError(errorData.message || "Email ou senha incorretos.")
+      }
+    } catch (err) {
+      // Captura erros de rede ou outros problemas na requisição
+      setError("Não foi possível conectar ao servidor. Tente novamente.")
+    } finally {
+      setLoading(false)
     }
-    // simular login bem-sucedido
-    onLogin({ email })
   }
 
   return (
@@ -48,8 +70,8 @@ export default function Login({ onLogin, goToSignup }: Props) {
         </div>
         {error && <div className="text-red-600">{error}</div>}
         <div className="flex items-center justify-between">
-          <button type="submit" className="px-4 py-2 bg-primary text-white rounded">
-            Entrar
+          <button type="submit" className="px-4 py-2 bg-primary text-white rounded" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
           </button>
           <button type="button" onClick={goToSignup} className="text-sm underline">
             Cadastre-se
