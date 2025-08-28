@@ -10,10 +10,5 @@
     "DATABASE_URL": "@database_url",
     "GMAIL_USER": "@gmail_user",
     "GMAIL_APP_PASSWORD": "@gmail_app_password"
-  },
-  "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30
-    }
   }
 }
