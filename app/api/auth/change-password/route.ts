@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
+import { getPrismaClient } from "@/lib/prisma"
 
 // Configuração para evitar build estático
 export const dynamic = 'force-dynamic'
 
-const prisma = new PrismaClient()
-
 export async function PUT(request: NextRequest) {
+  let prisma: any = null
+  
   try {
     const body = await request.json()
     const { userId, currentPassword, newPassword } = body
@@ -27,6 +27,9 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Inicializar Prisma apenas quando necessário
+    prisma = getPrismaClient()
 
     // Buscar usuário com senha
     const user = await prisma.user.findUnique({
@@ -81,5 +84,10 @@ export async function PUT(request: NextRequest) {
       { message: "Erro interno do servidor" },
       { status: 500 }
     )
+  } finally {
+    // Sempre desconectar o Prisma
+    if (prisma) {
+      await prisma.$disconnect()
+    }
   }
 }
