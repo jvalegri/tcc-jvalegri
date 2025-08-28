@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { NextRequest, NextResponse } from "next/server"
+import { PrismaClient } from "@prisma/client"
+
+// Configuração para evitar build estático
+export const dynamic = 'force-dynamic'
 
 const prisma = new PrismaClient()
 

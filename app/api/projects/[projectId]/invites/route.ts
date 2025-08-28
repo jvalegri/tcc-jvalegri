@@ -3,6 +3,9 @@ import { PrismaClient } from "@prisma/client"
 import { randomBytes } from "crypto"
 import { sendProjectInviteEmail } from "@/lib/email-service"
 
+// Configuração para evitar build estático
+export const dynamic = 'force-dynamic'
+
 const prisma = new PrismaClient()
 
 export async function GET(
