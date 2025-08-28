@@ -30,8 +30,7 @@ export function Profile({ user, onUpdateProfile }: ProfileProps) {
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
-    role: ""
+    email: ""
   })
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -48,8 +47,7 @@ export function Profile({ user, onUpdateProfile }: ProfileProps) {
     if (user) {
       setFormData({
         name: user.name || "",
-        email: user.email || "",
-        role: user.role || ""
+        email: user.email || ""
       })
     }
   }, [user])
@@ -111,8 +109,7 @@ export function Profile({ user, onUpdateProfile }: ProfileProps) {
         body: JSON.stringify({
           userId: user.id,
           name: formData.name.trim(),
-          email: formData.email.trim(),
-          role: formData.role.trim()
+          email: formData.email.trim()
         }),
       })
 
@@ -223,8 +220,7 @@ export function Profile({ user, onUpdateProfile }: ProfileProps) {
     if (user) {
       setFormData({
         name: user.name || "",
-        email: user.email || "",
-        role: user.role || ""
+        email: user.email || ""
       })
     }
     setIsEditing(false)
@@ -295,7 +291,7 @@ export function Profile({ user, onUpdateProfile }: ProfileProps) {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">E-mail *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -306,16 +302,7 @@ export function Profile({ user, onUpdateProfile }: ProfileProps) {
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="role">Função/Cargo</Label>
-                  <Input
-                    id="role"
-                    value={formData.role}
-                    onChange={(e) => handleInputChange("role", e.target.value)}
-                    placeholder="Sua função na empresa"
-                    disabled={isLoading}
-                  />
-                </div>
+                {/* Campo role removido - não deve ser editável pelo usuário */}
                 
                 <div className="flex gap-2 pt-2">
                   <Button onClick={handleSave} disabled={isLoading}>
@@ -335,7 +322,7 @@ export function Profile({ user, onUpdateProfile }: ProfileProps) {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">E-mail</Label>
                   <p className="text-lg font-medium">{user.email}</p>
                 </div>
                 

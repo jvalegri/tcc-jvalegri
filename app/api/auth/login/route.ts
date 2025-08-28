@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
       include: {
-        projects: {
+        ownedProjects: {
           select: {
             id: true,
             name: true,
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Retornar dados do usuário com projetos (pode ser array vazio)
     return NextResponse.json({
       ...userData,
-      projects: userData.projects || []
+      projects: userData.ownedProjects || [] // Mapear ownedProjects para projects para compatibilidade
     })
 
   } catch (error) {

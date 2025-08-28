@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, name, email, role } = body
+    const { userId, name, email } = body
 
     // Validar campos obrigatórios
     if (!userId || !name || !email) {
@@ -60,7 +60,6 @@ export async function PUT(request: NextRequest) {
       data: {
         name: name.trim(),
         email: email.trim(),
-        role: role?.trim() || null,
         updatedAt: new Date()
       }
     })

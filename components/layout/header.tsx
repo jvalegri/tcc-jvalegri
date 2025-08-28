@@ -15,6 +15,7 @@ const pageNames: Record<string, string> = {
   scanner: "Scanner QR",
   movements: "Movimentações",
   profile: "Perfil",
+  users: "Gestão de Usuários",
 }
 
 export function Header({ currentPage, setSidebarOpen }: HeaderProps) {

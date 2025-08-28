@@ -75,23 +75,42 @@ export async function POST(request: NextRequest) {
 
     console.log('Usuário encontrado, criando projeto...')
 
-    // Criar novo projeto
-    const newProject = await prisma.project.create({
-      data: {
-        name: name.trim(),
-        description: description?.trim() || null,
-        ownerId: userId
-      },
-      select: {
-        id: true,
-        name: true,
-        description: true
-      }
+    // Criar novo projeto e membro automaticamente em uma transação
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Criar o projeto
+      const newProject = await tx.project.create({
+        data: {
+          name: name.trim(),
+          description: description?.trim() || null,
+          ownerId: userId
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true
+        }
+      })
+
+      console.log('Projeto criado:', newProject)
+
+      // 2. Criar automaticamente o ProjectMember com role de GESTOR
+      const projectMember = await tx.projectMember.create({
+        data: {
+          projectId: newProject.id,
+          userId: userId,
+          role: 'GESTOR',
+          status: 'ATIVO'
+        }
+      })
+
+      console.log('Membro do projeto criado automaticamente:', projectMember)
+
+      return newProject
     })
 
-    console.log('Projeto criado com sucesso:', newProject)
+    console.log('Projeto e membro criados com sucesso:', result)
 
-    return NextResponse.json(newProject, { status: 201 })
+    return NextResponse.json(result, { status: 201 })
 
   } catch (error) {
     console.error('Erro ao criar projeto:', error)

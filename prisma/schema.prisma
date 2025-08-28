@@ -7,13 +7,83 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  GESTOR
+  COLABORADOR
+}
+
+enum UserStatus {
+  ATIVO
+  INATIVO
+  PENDENTE
+}
+
 model User {
   id              String           @id @default(auto()) @map("_id") @db.ObjectId
   email           String           @unique
   password        String
   name            String?
-  projects        Project[]        @relation("UserProjects")
+  role            UserRole          @default(COLABORADOR)
+  status          UserStatus        @default(ATIVO)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  // Relacionamentos
+  ownedProjects   Project[]        @relation("ProjectOwner")
+  projectMembers  ProjectMember[]
   movementRecords MovementRecord[]
+  sentInvites     ProjectInvite[]  @relation("InviteSender")
+}
+
+model Project {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  description     String?
+  owner           User             @relation("ProjectOwner", fields: [ownerId], references: [id])
+  ownerId         String           @db.ObjectId
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  // Relacionamentos
+  members         ProjectMember[]
+  materials       ProjectMaterial[]
+  movementRecords MovementRecord[]
+  invites         ProjectInvite[]
+}
+
+model ProjectMember {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId   String   @db.ObjectId
+  userId      String   @db.ObjectId
+  role        UserRole @default(COLABORADOR)
+  status      UserStatus @default(ATIVO)
+  joinedAt    DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relacionamentos
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, userId])
+}
+
+model ProjectInvite {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId   String   @db.ObjectId
+  email       String
+  name        String
+  role        UserRole @default(COLABORADOR)
+  status      String   @default("PENDENTE") // PENDENTE, ACEITO, EXPIRADO
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  sentBy      User     @relation("InviteSender", fields: [sentById], references: [id])
+  sentById    String   @db.ObjectId
+  
+  // Relacionamentos
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, email])
 }
 
 model Material {
@@ -33,21 +103,15 @@ model Material {
   projects        ProjectMaterial[]
 }
 
-model Project {
-  id              String           @id @default(auto()) @map("_id") @db.ObjectId
-  name            String
-  description     String?
-  owner           User             @relation("UserProjects", fields: [ownerId], references: [id])
-  ownerId         String           @db.ObjectId
-  materials       ProjectMaterial[] // Use explicit relation table
-  movementRecords MovementRecord[]
-}
-
 model MovementRecord {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   quantity        Float    // Mudando para Float para suportar decimais
   timestamp       DateTime @default(now())
   type            String   // 'entry' or 'exit'
+  location        String?
+  materialName    String?
+  actionType      String?
+  materialType    String?
   userId          String   @db.ObjectId
   user            User     @relation(fields: [userId], references: [id])
   materialId      String   @db.ObjectId

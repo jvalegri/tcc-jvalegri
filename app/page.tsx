@@ -15,12 +15,17 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import Signup from "@/components/pages/signup"
 import ProjectSelection from "@/components/pages/project-selection"
 import Login from "@/components/pages/login"
+import { UserManagement } from "@/components/pages/user-management"
 
 type User = {
   id: string
   email: string
   name?: string
   projects?: Project[]
+  role?: string
+  projectRole?: string
+  createdAt?: string
+  lastLogin?: string
 }
 
 type Project = {
@@ -93,6 +98,27 @@ export default function App() {
         setSelectedProject(project)
         setCurrentProjectId(projectId)
         setCurrentUserId(user.id)
+        
+        // Buscar o role do usuário neste projeto específico
+        try {
+          console.log("Buscando role do usuário no projeto...")
+          const membersResponse = await fetch(`/api/projects/${projectId}/members`)
+          if (membersResponse.ok) {
+            const members = await membersResponse.json()
+            const userMember = members.find((m: any) => m.userId === user.id)
+            
+            if (userMember) {
+              console.log("Role do usuário no projeto:", userMember.role)
+              // Atualizar o usuário com o role correto para este projeto
+              setUser(prev => prev ? { 
+                ...prev, 
+                projectRole: userMember.role // Role específico do projeto
+              } : null)
+            }
+          }
+        } catch (error) {
+          console.error("Erro ao buscar role do usuário no projeto:", error)
+        }
         
         // Carregar dados do projeto do banco de dados
         try {
@@ -206,7 +232,7 @@ export default function App() {
               id: user.id,
               name: user.name || "",
               email: user.email,
-              role: "Usuário",
+              role: user.projectRole || user.role || "COLABORADOR", // Usar o role correto do projeto
               createdAt: new Date().toISOString(),
               lastLogin: new Date().toISOString()
             }}
@@ -214,6 +240,24 @@ export default function App() {
               // Atualizar dados do usuário local
               setUser(prev => prev ? { ...prev, ...updatedProfile } : null)
             }}
+          />
+        ) : (
+          <div className="text-center mt-12">
+            <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
+            <button 
+              onClick={() => setCurrentPage("projects")} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Selecionar Projeto
+            </button>
+          </div>
+        )
+      case "users":
+        return user && selectedProject ? (
+          <UserManagement 
+            projectId={selectedProject.id}
+            currentUserRole={(user.projectRole || user.role || "COLABORADOR") as "GESTOR" | "COLABORADOR"}
+            currentUserId={user.id}
           />
         ) : (
           <div className="text-center mt-12">

@@ -54,25 +54,24 @@ export async function POST(request: NextRequest) {
       data: {
         email: email.toLowerCase(),
         password: hashedPassword,
-        name: name || null
+        name: name || null,
+        role: 'COLABORADOR',
+        status: 'ATIVO'
       },
       select: {
         id: true,
         email: true,
         name: true,
-        projects: {
-          select: {
-            id: true,
-            name: true,
-            description: true
-          }
-        }
+        role: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true
       }
     })
 
     return NextResponse.json({
       ...newUser,
-      projects: newUser.projects || []
+      projects: [] // Array vazio para compatibilidade com o frontend
     })
 
   } catch (error) {

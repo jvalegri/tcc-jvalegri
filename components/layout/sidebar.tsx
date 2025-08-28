@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Package, QrCode, History, X, LogOut, User } from "lucide-react"
+import { LayoutDashboard, Package, QrCode, History, X, LogOut, User, Users } from "lucide-react"
+import { UserRole } from "@/lib/types"
 
 interface SidebarProps {
   currentPage: string
@@ -10,16 +11,22 @@ interface SidebarProps {
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
   onLogout: () => void
+  currentUserRole?: UserRole
 }
 
 const navigation = [
-  { id: "dashboard", name: "Dashboard", icon: LayoutDashboard },
-  { id: "materials", name: "Materiais", icon: Package },
-  { id: "scanner", name: "Scanner QR", icon: QrCode },
-  { id: "movements", name: "Movimentações", icon: History },
+  { id: "dashboard", name: "Dashboard", icon: LayoutDashboard, roles: ["GESTOR", "COLABORADOR"] },
+  { id: "materials", name: "Materiais", icon: Package, roles: ["GESTOR", "COLABORADOR"] },
+  { id: "scanner", name: "Scanner QR", icon: QrCode, roles: ["GESTOR", "COLABORADOR"] },
+  { id: "movements", name: "Movimentações", icon: History, roles: ["GESTOR", "COLABORADOR"] },
+  { id: "users", name: "Gestão de Usuários", icon: Users, roles: ["GESTOR"] },
 ]
 
-export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOpen, onLogout }: SidebarProps) {
+export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOpen, onLogout, currentUserRole }: SidebarProps) {
+  const filteredNavigation = navigation.filter(item => 
+    !currentUserRole || item.roles.includes(currentUserRole)
+  )
+
   return (
     <>
       {/* Mobile overlay */}
@@ -44,7 +51,7 @@ export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOp
 
         {/* Navigation */}
         <nav className="p-4 space-y-2 flex-1">
-          {navigation.map((item) => {
+          {filteredNavigation.map((item) => {
             const Icon = item.icon
             return (
               <Button
