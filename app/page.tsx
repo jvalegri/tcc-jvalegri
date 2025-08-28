@@ -149,6 +149,10 @@ export default function App() {
     clearData()
   }
 
+  const handleBackToProjects = () => {
+    setCurrentPage("projects")
+  }
+
   const renderPage = () => {
     switch (currentPage) {
       case "login":
@@ -297,10 +301,17 @@ export default function App() {
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 onLogout={handleLogout}
+                onBackToProjects={handleBackToProjects}
+                currentUserRole={(user.projectRole || user.role || "COLABORADOR") as "GESTOR" | "COLABORADOR"}
+                projectName={selectedProject?.name}
               />
 
               <div className="flex-1 flex flex-col overflow-hidden">
-                <Header currentPage={currentPage} setSidebarOpen={setSidebarOpen} />
+                <Header 
+                  currentPage={currentPage} 
+                  setSidebarOpen={setSidebarOpen}
+                  projectName={selectedProject?.name}
+                />
                 <main className="flex-1 overflow-auto p-4 md:p-6">{renderPage()}</main>
               </div>
             </>

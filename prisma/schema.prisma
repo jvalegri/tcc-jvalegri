@@ -33,6 +33,7 @@ model User {
   projectMembers  ProjectMember[]
   movementRecords MovementRecord[]
   sentInvites     ProjectInvite[]  @relation("InviteSender")
+  receivedInvites ProjectInvite[]  @relation("InviteReceiver")
 }
 
 model Project {
@@ -79,9 +80,11 @@ model ProjectInvite {
   createdAt   DateTime @default(now())
   sentBy      User     @relation("InviteSender", fields: [sentById], references: [id])
   sentById    String   @db.ObjectId
+  userId      String?  @db.ObjectId // ID do usuário convidado (se existir)
   
   // Relacionamentos
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User?    @relation("InviteReceiver", fields: [userId], references: [id])
   
   @@unique([projectId, email])
 }

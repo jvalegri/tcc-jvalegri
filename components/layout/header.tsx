@@ -1,12 +1,13 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Menu, Sun, Moon } from "lucide-react"
+import { Menu, Sun, Moon, Building2 } from "lucide-react"
 import { useTheme } from "next-themes"
 
 interface HeaderProps {
   currentPage: string
   setSidebarOpen: (open: boolean) => void
+  projectName?: string
 }
 
 const pageNames: Record<string, string> = {
@@ -18,7 +19,7 @@ const pageNames: Record<string, string> = {
   users: "Gestão de Usuários",
 }
 
-export function Header({ currentPage, setSidebarOpen }: HeaderProps) {
+export function Header({ currentPage, setSidebarOpen, projectName }: HeaderProps) {
   const { theme, setTheme } = useTheme()
 
   return (
@@ -28,7 +29,19 @@ export function Header({ currentPage, setSidebarOpen }: HeaderProps) {
           <Menu className="h-4 w-4" />
         </Button>
 
-        <h2 className="text-lg font-semibold">{pageNames[currentPage as keyof typeof pageNames]}</h2>
+        <div className="flex items-center gap-3">
+          {/* Nome do Projeto */}
+          {projectName && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Building2 className="h-4 w-4" />
+              <span className="text-sm font-medium">{projectName}</span>
+              <span className="text-muted-foreground">•</span>
+            </div>
+          )}
+          
+          {/* Nome da Página */}
+          <h2 className="text-lg font-semibold">{pageNames[currentPage as keyof typeof pageNames]}</h2>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

@@ -148,6 +148,35 @@ export function UserManagement({ projectId, currentUserRole, currentUserId }: Us
     }
   }
 
+  const handleRemoveUser = async (memberId: string, name: string) => {
+    if (!confirm(`Tem certeza que deseja remover o usuário ${name}?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}/members/${memberId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Usuário removido",
+          description: `Usuário ${name} removido com sucesso!`,
+        })
+        fetchMembers()
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Erro ao remover usuário")
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao remover usuário",
+        description: error instanceof Error ? error.message : "Não foi possível remover o usuário.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const getRoleColor = (role: UserRole) => {
     return role === "GESTOR" ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
   }
@@ -247,15 +276,27 @@ export function UserManagement({ projectId, currentUserRole, currentUserId }: Us
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
-                      <Label htmlFor={`status-${member.id}`} className="text-sm">
-                        {member.status === "ATIVO" ? "Ativo" : "Inativo"}
-                      </Label>
-                      <Switch
-                        id={`status-${member.id}`}
-                        checked={member.status === "ATIVO"}
-                        onCheckedChange={() => handleToggleUserStatus(member.id, member.status)}
-                        disabled={member.user?.role === "GESTOR"} // Não pode desativar gestores
-                      />
+                      <div className="flex items-center space-x-2">
+                        <Label htmlFor={`status-${member.id}`} className="text-sm">
+                          {member.status === "ATIVO" ? "Ativo" : "Inativo"}
+                        </Label>
+                        <Switch
+                          id={`status-${member.id}`}
+                          checked={member.status === "ATIVO"}
+                          onCheckedChange={() => handleToggleUserStatus(member.id, member.status)}
+                          disabled={member.user?.role === "GESTOR"} // Não pode desativar gestores
+                        />
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveUser(member.id, member.user?.name || "Usuário")}
+                        disabled={member.user?.id === currentUserId} // Não pode remover a si mesmo
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        Remover
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

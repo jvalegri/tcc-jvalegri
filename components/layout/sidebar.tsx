@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Package, QrCode, History, X, LogOut, User, Users } from "lucide-react"
+import { LayoutDashboard, Package, QrCode, History, X, LogOut, User, Users, FolderOpen } from "lucide-react"
 import { UserRole } from "@/lib/types"
 
 interface SidebarProps {
@@ -12,6 +12,8 @@ interface SidebarProps {
   setSidebarOpen: (open: boolean) => void
   onLogout: () => void
   currentUserRole?: UserRole
+  projectName?: string
+  onBackToProjects?: () => void
 }
 
 const navigation = [
@@ -22,7 +24,7 @@ const navigation = [
   { id: "users", name: "Gestão de Usuários", icon: Users, roles: ["GESTOR"] },
 ]
 
-export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOpen, onLogout, currentUserRole }: SidebarProps) {
+export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOpen, onLogout, currentUserRole, projectName, onBackToProjects }: SidebarProps) {
   const filteredNavigation = navigation.filter(item => 
     !currentUserRole || item.roles.includes(currentUserRole)
   )
@@ -43,7 +45,14 @@ export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOp
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h1 className="text-xl font-bold">EasyStock</h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold">EasyStock</h1>
+            {projectName && (
+              <p className="text-sm text-muted-foreground font-medium truncate">
+                {projectName}
+              </p>
+            )}
+          </div>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(false)}>
             <X className="h-4 w-4" />
           </Button>
@@ -82,6 +91,18 @@ export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOp
           >
             <User className="mr-2 h-4 w-4" />
             Perfil
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => {
+              onBackToProjects?.()
+              setSidebarOpen(false)
+            }}
+          >
+            <FolderOpen className="mr-2 h-4 w-4" />
+            Meus Projetos
           </Button>
           
           <Button
