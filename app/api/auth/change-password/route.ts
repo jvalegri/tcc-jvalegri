@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import { getPrismaClient } from "@/lib/prisma"
 
 // Configuração para evitar build estático
 export const dynamic = 'force-dynamic'
 
 export async function PUT(request: NextRequest) {
-  let prisma: any = null
-  
   try {
     const body = await request.json()
     const { userId, currentPassword, newPassword } = body
@@ -28,54 +25,60 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Inicializar Prisma apenas quando necessário
-    prisma = getPrismaClient()
+    // Importar Prisma apenas quando necessário (runtime)
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
 
-    // Buscar usuário com senha
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        password: true,
-        email: true
+    try {
+      // Buscar usuário com senha
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          password: true,
+          email: true
+        }
+      })
+
+      if (!user) {
+        return NextResponse.json(
+          { message: "Usuário não encontrado" },
+          { status: 404 }
+        )
       }
-    })
 
-    if (!user) {
-      return NextResponse.json(
-        { message: "Usuário não encontrado" },
-        { status: 404 }
-      )
-    }
-
-    // Verificar se a senha atual está correta
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password)
-    
-    if (!isCurrentPasswordValid) {
-      return NextResponse.json(
-        { message: "Senha atual incorreta" },
-        { status: 401 }
-      )
-    }
-
-    // Hash da nova senha
-    const hashedNewPassword = await bcrypt.hash(newPassword, 12)
-
-    // Atualizar senha no banco
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        password: hashedNewPassword,
-        updatedAt: new Date()
+      // Verificar se a senha atual está correta
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password)
+      
+      if (!isCurrentPasswordValid) {
+        return NextResponse.json(
+          { message: "Senha atual incorreta" },
+          { status: 401 }
+        )
       }
-    })
 
-    // Log da alteração (sem expor dados sensíveis)
-    console.log(`Senha alterada para usuário: ${user.email}`)
+      // Hash da nova senha
+      const hashedNewPassword = await bcrypt.hash(newPassword, 12)
 
-    return NextResponse.json({
-      message: "Senha alterada com sucesso"
-    })
+      // Atualizar senha no banco
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          password: hashedNewPassword,
+          updatedAt: new Date()
+        }
+      })
+
+      // Log da alteração (sem expor dados sensíveis)
+      console.log(`Senha alterada para usuário: ${user.email}`)
+
+      return NextResponse.json({
+        message: "Senha alterada com sucesso"
+      })
+
+    } finally {
+      await prisma.$disconnect()
+    }
 
   } catch (error) {
     console.error("Erro ao alterar senha:", error)
@@ -84,10 +87,5 @@ export async function PUT(request: NextRequest) {
       { message: "Erro interno do servidor" },
       { status: 500 }
     )
-  } finally {
-    // Sempre desconectar o Prisma
-    if (prisma) {
-      await prisma.$disconnect()
-    }
   }
 }

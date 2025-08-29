@@ -19,13 +19,13 @@ export function Materials() {
   const [selectedStatus, setSelectedStatus] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
-  const categories = [...new Set(materials.map((m) => m.category))]
+  const categories = [...new Set(materials.map((m) => m.category).filter(Boolean))] as string[]
   const statuses = ["Em Estoque", "Estoque Baixo", "Sem Estoque"]
 
   const filteredMaterials = materials.filter((material) => {
     const matchesSearch =
       material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      material.supplier.toLowerCase().includes(searchTerm.toLowerCase())
+      (material.supplier?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
     const matchesCategory = !selectedCategory || material.category === selectedCategory
     const matchesStatus = !selectedStatus || material.status === selectedStatus
 
@@ -157,7 +157,7 @@ export function Materials() {
                     </TableCell>
                     <TableCell>R$ {material.price.toFixed(2)}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusColor(material.status)}>{material.status}</Badge>
+                      <Badge variant={getStatusColor(material.status || "Em Estoque")}>{material.status || "Em Estoque"}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <MaterialActions material={material} />

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
+import { getPrismaClient, disconnectPrisma } from "@/lib/prisma-client"
 
 // Configuração para evitar build estático
 export const dynamic = 'force-dynamic'
-
-const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +16,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Obter cliente Prisma
+    const prisma = getPrismaClient()
 
     // Buscar usuário pelo email
     const user = await prisma.user.findUnique({
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
+    // Desconectar Prisma se necessário
+    await disconnectPrisma()
   }
 }

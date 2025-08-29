@@ -58,6 +58,7 @@ export interface Material {
   projectId: string
   category?: string
   currentQuantity?: number
+  status?: string
 }
 
 export interface MovementRecord {

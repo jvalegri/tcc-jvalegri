@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
 
 // Configuração para evitar build estático
 export const dynamic = 'force-dynamic'
-
-const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,46 +33,55 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verificar se o usuário já existe
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
-    })
+    // Importar Prisma apenas quando necessário (runtime)
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
 
-    if (existingUser) {
-      return NextResponse.json(
-        { message: 'Este email já está cadastrado.' },
-        { status: 409 }
-      )
-    }
+    try {
+      // Verificar se o usuário já existe
+      const existingUser = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() }
+      })
 
-    // Hash da senha
-    const saltRounds = 12
-    const hashedPassword = await bcrypt.hash(password, saltRounds)
-
-    // Criar novo usuário
-    const newUser = await prisma.user.create({
-      data: {
-        email: email.toLowerCase(),
-        password: hashedPassword,
-        name: name || null,
-        role: 'COLABORADOR',
-        status: 'ATIVO'
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true
+      if (existingUser) {
+        return NextResponse.json(
+          { message: 'Este email já está cadastrado.' },
+          { status: 409 }
+        )
       }
-    })
 
-    return NextResponse.json({
-      ...newUser,
-      projects: [] // Array vazio para compatibilidade com o frontend
-    })
+      // Hash da senha
+      const saltRounds = 12
+      const hashedPassword = await bcrypt.hash(password, saltRounds)
+
+      // Criar novo usuário
+      const newUser = await prisma.user.create({
+        data: {
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          name: name || null,
+          role: 'COLABORADOR',
+          status: 'ATIVO'
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      })
+
+      return NextResponse.json({
+        ...newUser,
+        projects: [] // Array vazio para compatibilidade com o frontend
+      })
+
+    } finally {
+      await prisma.$disconnect()
+    }
 
   } catch (error) {
     console.error('Erro no cadastro:', error)
@@ -83,7 +89,5 @@ export async function POST(request: NextRequest) {
       { message: 'Erro interno do servidor.' },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }

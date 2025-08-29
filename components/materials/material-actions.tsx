@@ -156,14 +156,20 @@ export function MaterialActions({ material }: MaterialActionsProps) {
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold">Status</h4>
-                <p>{material.status}</p>
+                <h4 className="font-semibold">Status do Estoque</h4>
+                <p>
+                  {material.quantity <= material.minStock
+                    ? material.quantity === 0
+                      ? "Sem Estoque"
+                      : "Estoque Baixo"
+                    : "Em Estoque"}
+                </p>
               </div>
             </div>
-            {material.notes && (
+            {material.description && (
               <div>
-                <h4 className="font-semibold">Observações</h4>
-                <p className="text-muted-foreground">{material.notes}</p>
+                <h4 className="font-semibold">Descrição</h4>
+                <p className="text-muted-foreground">{material.description}</p>
               </div>
             )}
           </div>

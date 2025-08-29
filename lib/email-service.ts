@@ -15,6 +15,7 @@ export interface EmailTemplateData {
   role: string
   initialPassword: string | null
   inviteUrl: string
+  email: string
 }
 
 // Configurar transporter do Gmail
@@ -51,14 +52,16 @@ export async function sendProjectInviteEmail(data: EmailInviteData): Promise<{ s
         projectName: data.projectName,
         role: data.role,
         initialPassword: data.initialPassword,
-        inviteUrl: data.inviteUrl
+        inviteUrl: data.inviteUrl,
+        email: data.to
       }),
       text: generateInviteEmailText({
         name: data.name,
         projectName: data.projectName,
         role: data.role,
         initialPassword: data.initialPassword,
-        inviteUrl: data.inviteUrl
+        inviteUrl: data.inviteUrl,
+        email: data.to
       })
     }
 
@@ -134,7 +137,7 @@ function generateInviteEmailHTML(data: EmailTemplateData): string {
                 ${isNewUser ? `
                 <div class="highlight">
                     <h3>🔑 Suas Credenciais:</h3>
-                    <p><strong>E-mail:</strong> ${data.to}</p>
+                    <p><strong>E-mail:</strong> ${data.email}</p>
                     <p><strong>Senha Inicial:</strong> <code>${data.initialPassword}</code></p>
                     <p><em>Recomendamos alterar esta senha após o primeiro login.</em></p>
                 </div>
@@ -180,7 +183,7 @@ DETALHES DO CONVITE:
 
 ${isNewUser ? `
 SUAS CREDENCIAIS:
-- E-mail: ${data.to}
+- E-mail: ${data.email}
 - Senha Inicial: ${data.initialPassword}
 
 Recomendamos alterar esta senha após o primeiro login.

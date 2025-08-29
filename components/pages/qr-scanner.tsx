@@ -81,7 +81,7 @@ export function QRScanner() {
   const handleScanCode = (code: string) => {
     const material = materials.find((m) => m.id === code)
     setScannedCode(code)
-    setFoundMaterial(material)
+    setFoundMaterial(material || null)
 
     toast({
       title: material ? "Material encontrado" : "Material não encontrado",

@@ -121,7 +121,7 @@ export const useMaterialStore = create<MaterialStore>((set, get) => ({
       const apiData = {
         id,
         name: updatedMaterial.name,
-        description: updatedMaterial.notes,
+        description: updatedMaterial.description,
         type: updatedMaterial.category,
         currentQuantity: updatedMaterial.quantity,
         unit: updatedMaterial.unit,

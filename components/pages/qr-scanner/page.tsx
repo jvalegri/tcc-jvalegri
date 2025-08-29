@@ -14,11 +14,14 @@ import { useMaterialStore } from "@/lib/stores/material-store"
 export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { initializeData } = useMaterialStore()
+  const { fetchMaterials, fetchMovements, currentProjectId } = useMaterialStore()
 
   useEffect(() => {
-    initializeData()
-  }, [initializeData])
+    if (currentProjectId) {
+      fetchMaterials(currentProjectId)
+      fetchMovements(currentProjectId)
+    }
+  }, [fetchMaterials, fetchMovements, currentProjectId])
 
   const renderPage = () => {
     switch (currentPage) {
@@ -43,6 +46,7 @@ export default function App() {
           setCurrentPage={setCurrentPage}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
+          onLogout={() => {}}
         />
 
         <div className="flex-1 flex flex-col overflow-hidden">

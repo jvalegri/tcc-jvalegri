@@ -28,7 +28,7 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
     unit: material?.unit || "un",
     price: material?.price || "",
     minStock: material?.minStock || "",
-    notes: material?.notes || "",
+    description: material?.description || "",
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -95,7 +95,7 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
           unit: formData.unit,
           price: parseFloat(formData.price.toString()) || 0,
           minStock: parseFloat(formData.minStock.toString()) || 0,
-          notes: formData.notes,
+          notes: formData.description,
           status: parseFloat(formData.quantity.toString()) <= parseFloat(formData.minStock.toString())
             ? parseFloat(formData.quantity.toString()) === 0
               ? "Sem Estoque"
@@ -112,7 +112,7 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
         // Criação de novo material
         const apiMaterialData = {
           name: formData.name,
-          description: formData.notes,
+          description: formData.description,
           type: formData.category,
           currentQuantity: parseFloat(formData.quantity.toString()) || 0,
           unit: formData.unit,
@@ -274,8 +274,8 @@ export function MaterialForm({ material, onSuccess }: MaterialFormProps) {
         <Label htmlFor="notes">Observações</Label>
         <Textarea
           id="notes"
-          value={formData.notes}
-          onChange={(e) => handleChange("notes", e.target.value)}
+          value={formData.description}
+          onChange={(e) => handleChange("description", e.target.value)}
           placeholder="Informações adicionais sobre o material..."
           rows={3}
         />
