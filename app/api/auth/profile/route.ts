@@ -1,76 +1,53 @@
 import { NextRequest, NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
 
 // Configuração para evitar build estático
 export const dynamic = 'force-dynamic'
 
-const prisma = new PrismaClient()
-
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, name, email } = body
+    const { id, name, email } = body
 
-    // Validar campos obrigatórios
-    if (!userId || !name || !email) {
+    // Validação dos campos obrigatórios
+    if (!id || !name || !email) {
       return NextResponse.json(
-        { message: "ID do usuário, nome e email são obrigatórios" },
+        { message: "ID, nome e email são obrigatórios" },
         { status: 400 }
       )
     }
 
-    // Validar formato do email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { message: "Formato de email inválido" },
-        { status: 400 }
-      )
-    }
+    // Importar Prisma apenas quando necessário (runtime)
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
 
-    // Verificar se o usuário existe
-    const existingUser = await prisma.user.findUnique({
-      where: { id: userId }
-    })
-
-    if (!existingUser) {
-      return NextResponse.json(
-        { message: "Usuário não encontrado" },
-        { status: 404 }
-      )
-    }
-
-    // Verificar se o email já está sendo usado por outro usuário
-    if (email !== existingUser.email) {
-      const emailInUse = await prisma.user.findFirst({
-        where: {
-          email: email,
-          id: { not: userId }
+    try {
+      // Atualizar usuário
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          updatedAt: new Date()
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true
         }
       })
 
-      if (emailInUse) {
-        return NextResponse.json(
-          { message: "Este email já está sendo usado por outro usuário" },
-          { status: 409 }
-        )
-      }
+      return NextResponse.json({
+        message: "Perfil atualizado com sucesso",
+        user: updatedUser
+      })
+
+    } finally {
+      await prisma.$disconnect()
     }
-
-    // Atualizar o usuário
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        name: name.trim(),
-        email: email.trim(),
-        updatedAt: new Date()
-      }
-    })
-
-    // Retornar dados atualizados (sem senha)
-    const { password, ...userWithoutPassword } = updatedUser
-
-    return NextResponse.json(userWithoutPassword)
 
   } catch (error) {
     console.error("Erro ao atualizar perfil:", error)
@@ -95,26 +72,34 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar usuário
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      })
+
+      if (!user) {
+        return NextResponse.json(
+          { message: "Usuário não encontrado" },
+          { status: 404 }
+        )
       }
-    })
 
-    if (!user) {
-      return NextResponse.json(
-        { message: "Usuário não encontrado" },
-        { status: 404 }
-      )
+      return NextResponse.json(user)
+
+    } finally {
+      await prisma.$disconnect()
     }
-
-    return NextResponse.json(user)
 
   } catch (error) {
     console.error("Erro ao buscar perfil:", error)

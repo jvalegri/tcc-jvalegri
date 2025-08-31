@@ -198,23 +198,25 @@ export async function POST(request: NextRequest) {
     console.log('POST /api/movements - Movimentação criada:', newMovement)
 
     // Atualizar quantidade do material
-    const newQuantity = type === 'entrada' 
-      ? material.currentQuantity + parseFloat(quantity)
-      : material.currentQuantity - parseFloat(quantity)
-
-    console.log('POST /api/movements - Atualizando quantidade do material:', {
-      materialId,
-      currentQuantity: material.currentQuantity,
-      delta: type === 'entrada' ? parseFloat(quantity) : -parseFloat(quantity),
-      newQuantity: Math.max(0, newQuantity)
-    })
-
-    await prisma.material.update({
-      where: { id: materialId },
-      data: {
-        currentQuantity: Math.max(0, newQuantity)
-      }
-    })
+    if (movementType === 'entry') {
+      await prisma.material.update({
+        where: { id: materialId },
+        data: {
+          currentQuantity: {
+            increment: parseFloat(quantity) || 0
+          }
+        }
+      })
+    } else if (movementType === 'exit') {
+      await prisma.material.update({
+        where: { id: materialId },
+        data: {
+          currentQuantity: {
+            decrement: parseFloat(quantity) || 0
+          }
+        }
+      })
+    }
 
     console.log('POST /api/movements - Quantidade do material atualizada')
 
