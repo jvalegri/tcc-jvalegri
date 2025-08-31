@@ -38,6 +38,10 @@ export async function POST(request: NextRequest) {
     const prisma = new PrismaClient()
 
     try {
+      // Testar conexão com o banco
+      await prisma.$connect()
+      console.log('Conexão com banco estabelecida (signup)')
+
       // Verificar se o usuário já existe
       const existingUser = await prisma.user.findUnique({
         where: { email: email.toLowerCase() }
@@ -74,11 +78,16 @@ export async function POST(request: NextRequest) {
         }
       })
 
+      console.log('Usuário criado com sucesso:', newUser.id)
+
       return NextResponse.json({
         ...newUser,
         projects: [] // Array vazio para compatibilidade com o frontend
       })
 
+    } catch (dbError) {
+      console.error('Erro específico do banco (signup):', dbError)
+      throw dbError
     } finally {
       await prisma.$disconnect()
     }

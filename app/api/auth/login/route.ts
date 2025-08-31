@@ -21,6 +21,10 @@ export async function POST(request: NextRequest) {
     const prisma = new PrismaClient()
 
     try {
+      // Testar conexão com o banco
+      await prisma.$connect()
+      console.log('Conexão com banco estabelecida')
+
       // Buscar usuário pelo email
       const user = await prisma.user.findUnique({
         where: { email: email.toLowerCase() },
@@ -34,6 +38,8 @@ export async function POST(request: NextRequest) {
           }
         }
       })
+
+      console.log('Usuário encontrado:', !!user)
 
       // Verificar se o usuário existe
       if (!user) {
@@ -61,6 +67,9 @@ export async function POST(request: NextRequest) {
         projects: userData.ownedProjects || [] // Mapear ownedProjects para projects para compatibilidade
       })
 
+    } catch (dbError) {
+      console.error('Erro específico do banco:', dbError)
+      throw dbError
     } finally {
       await prisma.$disconnect()
     }
