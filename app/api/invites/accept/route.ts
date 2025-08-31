@@ -57,6 +57,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Verificar se o usuário já é membro do projeto
+      if (invite.userId !== userId) {
+        return NextResponse.json(
+          { message: "Convite não pertence a este usuário" },
+          { status: 403 }
+        )
+      }
+
       const existingMember = await prisma.projectMember.findFirst({
         where: {
           projectId: invite.projectId,
@@ -87,8 +94,7 @@ export async function POST(request: NextRequest) {
       await prisma.projectInvite.update({
         where: { token },
         data: {
-          status: "ACEITO",
-          userId: userId
+          status: "ACEITO"
         }
       })
 

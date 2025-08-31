@@ -97,15 +97,13 @@ export async function POST(request: NextRequest, { params }: { params: { project
       })
 
       // Enviar e-mail de convite
-      const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/invites/accept?token=${token}&userId=${existingUser.id}`
-
       const emailResult = await sendProjectInviteEmail({
         to: email,
         name: name,
         projectName: project.name,
         role: role,
-        initialPassword: null, // Usuário já existe
-        inviteUrl: inviteUrl
+        inviteToken: token,
+        userId: existingUser.id
       })
 
       if (!emailResult.success) {

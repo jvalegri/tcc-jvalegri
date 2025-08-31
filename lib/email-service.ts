@@ -5,16 +5,16 @@ export interface EmailInviteData {
   name: string
   projectName: string
   role: string
-  initialPassword: string | null // null para usuários existentes
-  inviteUrl: string
+  inviteToken: string
+  userId: string
 }
 
 export interface EmailTemplateData {
   name: string
   projectName: string
   role: string
-  initialPassword: string | null
-  inviteUrl: string
+  inviteToken: string
+  userId: string
   email: string
 }
 
@@ -51,16 +51,16 @@ export async function sendProjectInviteEmail(data: EmailInviteData): Promise<{ s
         name: data.name,
         projectName: data.projectName,
         role: data.role,
-        initialPassword: data.initialPassword,
-        inviteUrl: data.inviteUrl,
+        inviteToken: data.inviteToken,
+        userId: data.userId,
         email: data.to
       }),
       text: generateInviteEmailText({
         name: data.name,
         projectName: data.projectName,
         role: data.role,
-        initialPassword: data.initialPassword,
-        inviteUrl: data.inviteUrl,
+        inviteToken: data.inviteToken,
+        userId: data.userId,
         email: data.to
       })
     }
@@ -96,7 +96,8 @@ export async function sendProjectInviteEmail(data: EmailInviteData): Promise<{ s
  * Gera template HTML para e-mail de convite
  */
 function generateInviteEmailHTML(data: EmailTemplateData): string {
-  const isNewUser = data.initialPassword !== null
+  const loginUrl = 'https://estock.vercel.app/'
+  const inviteUrl = `${loginUrl}?invite=${data.inviteToken}&userId=${data.userId}`
   
   return `
     <!DOCTYPE html>
@@ -131,24 +132,17 @@ function generateInviteEmailHTML(data: EmailTemplateData): string {
                     <h3>📋 Detalhes do Convite:</h3>
                     <p><strong>Projeto:</strong> ${data.projectName}</p>
                     <p><strong>Função:</strong> ${data.role}</p>
-                    <p><strong>Link de Acesso:</strong> <a href="${data.inviteUrl}">Clique aqui para aceitar</a></p>
                 </div>
                 
-                ${isNewUser ? `
                 <div class="highlight">
-                    <h3>🔑 Suas Credenciais:</h3>
-                    <p><strong>E-mail:</strong> ${data.email}</p>
-                    <p><strong>Senha Inicial:</strong> <code>${data.initialPassword}</code></p>
-                    <p><em>Recomendamos alterar esta senha após o primeiro login.</em></p>
+                    <h3>🔑 Como Aceitar:</h3>
+                    <p>1. Clique no botão abaixo para acessar o EasyStock</p>
+                    <p>2. Faça login com suas credenciais</p>
+                    <p>3. Um popup aparecerá perguntando se você aceita participar do projeto</p>
+                    <p>4. Clique em "Aceitar" para confirmar</p>
                 </div>
-                ` : `
-                <div class="highlight">
-                    <h3>🔑 Acesso:</h3>
-                    <p>Use suas credenciais atuais do EasyStock para acessar o projeto.</p>
-                </div>
-                `}
                 
-                <a href="${data.inviteUrl}" class="button">✅ Aceitar Convite</a>
+                <a href="${loginUrl}" class="button">🚀 Acessar EasyStock</a>
                 
                 <p><em>Este convite expira em 7 dias.</em></p>
             </div>
@@ -167,7 +161,7 @@ function generateInviteEmailHTML(data: EmailTemplateData): string {
  * Gera template de texto para e-mail de convite
  */
 function generateInviteEmailText(data: EmailTemplateData): string {
-  const isNewUser = data.initialPassword !== null
+  const loginUrl = 'https://estock.vercel.app/'
   
   return `
 EasyStock - Convite para Projeto
@@ -179,25 +173,17 @@ Você foi convidado para participar do projeto ${data.projectName} como ${data.r
 DETALHES DO CONVITE:
 - Projeto: ${data.projectName}
 - Função: ${data.role}
-- Link de Acesso: ${data.inviteUrl}
 
-${isNewUser ? `
-SUAS CREDENCIAIS:
-- E-mail: ${data.email}
-- Senha Inicial: ${data.initialPassword}
-
-Recomendamos alterar esta senha após o primeiro login.
-` : `
-ACESSO:
-Use suas credenciais atuais do EasyStock para acessar o projeto.
-`}
-
-Para aceitar o convite, acesse: ${data.inviteUrl}
+COMO ACEITAR:
+1. Acesse: ${loginUrl}
+2. Faça login com suas credenciais
+3. Um popup aparecerá perguntando se você aceita participar do projeto
+4. Clique em "Aceitar" para confirmar
 
 Este convite expira em 7 dias.
 
 ---
 EasyStock - Sistema de Gestão de Estoque
 Se você não solicitou este convite, pode ignorá-lo com segurança.
-  `
+`
 }
