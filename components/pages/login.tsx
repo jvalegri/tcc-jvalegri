@@ -25,6 +25,7 @@ interface Invite {
     email: string
   }
   expiresAt: string
+  userId: string
 }
 
 export default function Login({ onLogin, goToSignup }: Props) {

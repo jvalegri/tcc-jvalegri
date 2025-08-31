@@ -50,7 +50,8 @@ export async function GET(request: NextRequest) {
         project: invite.project,
         role: invite.role,
         sentBy: invite.sentBy,
-        expiresAt: invite.expiresAt
+        expiresAt: invite.expiresAt,
+        userId: invite.userId
       }))
 
       return NextResponse.json(invites)
