@@ -1,0 +1,16 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
+  "/api/auth/profile/route": "app/api/auth/profile/route.js",
+  "/api/auth/change-password/route": "app/api/auth/change-password/route.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/auth/projects/route": "app/api/auth/projects/route.js",
+  "/api/auth/signup/route": "app/api/auth/signup/route.js",
+  "/api/invites/accept/route": "app/api/invites/accept/route.js",
+  "/api/materials/route": "app/api/materials/route.js",
+  "/api/movements/route": "app/api/movements/route.js",
+  "/api/projects/[projectId]/members/[memberId]/route": "app/api/projects/[projectId]/members/[memberId]/route.js",
+  "/api/projects/[projectId]/members/route": "app/api/projects/[projectId]/members/route.js",
+  "/api/projects/[projectId]/members/[memberId]/status/route": "app/api/projects/[projectId]/members/[memberId]/status/route.js",
+  "/api/projects/[projectId]/invites/route": "app/api/projects/[projectId]/invites/route.js"
+}

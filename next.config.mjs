@@ -3,6 +3,8 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs']
   },
+  // Configurações para deploy
+  output: 'standalone',
   // Forçar todas as rotas da API a serem dinâmicas
   async headers() {
     return [
