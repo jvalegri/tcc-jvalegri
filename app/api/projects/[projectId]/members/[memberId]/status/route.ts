@@ -1,26 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
 
 // Configuração para evitar build estático
 export const dynamic = 'force-dynamic'
-
-const prisma = new PrismaClient()
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { projectId: string; memberId: string } }
 ) {
   try {
-    const { projectId, memberId } = params
     const body = await request.json()
     const { status } = body
-
-    if (!projectId || !memberId) {
-      return NextResponse.json(
-        { message: "ID do projeto e ID do membro são obrigatórios" },
-        { status: 400 }
-      )
-    }
 
     if (!status || !["ATIVO", "INATIVO"].includes(status)) {
       return NextResponse.json(
@@ -29,67 +18,66 @@ export async function PUT(
       )
     }
 
-    console.log(`Alterando status do membro ${memberId} para ${status} no projeto ${projectId}`)
+    // Importar Prisma apenas quando necessário (runtime)
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
 
-    // Verificar se o membro existe e não é um gestor
-    const member = await prisma.projectMember.findUnique({
-      where: {
-        id: memberId
-      },
-      include: {
-        user: true
+    try {
+      // Verificar se o membro existe
+      const member = await prisma.projectMember.findUnique({
+        where: { id: params.memberId },
+        include: { user: true }
+      })
+
+      if (!member) {
+        return NextResponse.json(
+          { message: "Membro não encontrado" },
+          { status: 404 }
+        )
       }
-    })
 
-    if (!member) {
-      return NextResponse.json(
-        { message: "Membro não encontrado" },
-        { status: 404 }
-      )
-    }
-
-    // Não permitir desativar gestores
-    if (member.role === "GESTOR" && status === "INATIVO") {
-      return NextResponse.json(
-        { message: "Não é possível desativar gestores do projeto" },
-        { status: 403 }
-      )
-    }
-
-    // Atualizar o status do membro
-    const updatedMember = await prisma.projectMember.update({
-      where: {
-        id: memberId
-      },
-      data: {
-        status: status,
-        updatedAt: new Date()
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            status: true
+      // Verificar se não está desativando o último gestor ativo
+      if (member.role === "GESTOR" && status === "INATIVO") {
+        const gestorCount = await prisma.projectMember.count({
+          where: {
+            projectId: params.projectId,
+            role: "GESTOR",
+            status: "ATIVO"
           }
+        })
+
+        if (gestorCount <= 1) {
+          return NextResponse.json(
+            { message: "Não é possível desativar o último gestor ativo do projeto" },
+            { status: 400 }
+          )
         }
       }
-    })
 
-    console.log(`Status do membro ${memberId} alterado para ${status}`)
+      // Atualizar status do membro
+      const updatedMember = await prisma.projectMember.update({
+        where: { id: params.memberId },
+        data: { 
+          status,
+          updatedAt: new Date()
+        },
+        include: { user: true }
+      })
 
-    return NextResponse.json(updatedMember)
+      return NextResponse.json({
+        message: `Membro ${status === 'ATIVO' ? 'ativado' : 'desativado'} com sucesso`,
+        member: updatedMember
+      })
+
+    } finally {
+      await prisma.$disconnect()
+    }
 
   } catch (error) {
-    console.error("Erro ao alterar status do membro:", error)
-    
+    console.error("Erro ao atualizar status do membro:", error)
     return NextResponse.json(
       { message: "Erro interno do servidor" },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }
