@@ -1,23 +1,12 @@
-export type UserRole = 'GESTOR' | 'COLABORADOR'
-export type UserStatus = 'ATIVO' | 'INATIVO' | 'PENDENTE'
-
-export interface User {
-  id: string
-  email: string
-  name?: string
-  role: UserRole
-  status: UserStatus
-  createdAt: string
-  updatedAt: string
+export enum UserRole {
+  GESTOR = 'GESTOR',
+  COLABORADOR = 'COLABORADOR'
 }
 
-export interface Project {
-  id: string
-  name: string
-  description?: string
-  ownerId: string
-  createdAt: string
-  updatedAt: string
+export enum UserStatus {
+  ATIVO = 'ATIVO',
+  INATIVO = 'INATIVO',
+  PENDENTE = 'PENDENTE'
 }
 
 export interface ProjectMember {
@@ -26,9 +15,13 @@ export interface ProjectMember {
   userId: string
   role: UserRole
   status: UserStatus
-  joinedAt: string
-  updatedAt: string
-  user?: User
+  joinedAt: Date
+  updatedAt: Date
+  user?: {
+    id: string
+    name?: string
+    email: string
+  }
 }
 
 export interface ProjectInvite {
@@ -39,40 +32,66 @@ export interface ProjectInvite {
   role: UserRole
   status: string
   token: string
-  expiresAt: string
-  createdAt: string
+  expiresAt: Date
+  createdAt: Date
   sentById: string
+  userId?: string
+  sentBy?: {
+    name?: string
+    email: string
+  }
+  project?: {
+    id: string
+    name: string
+  }
 }
 
 export interface Material {
   id: string
   name: string
   description?: string
-  type?: string
-  quantity: number
-  unit: string
-  price: number
-  supplier?: string
-  minStock: number
-  isConsumable: boolean
-  projectId: string
   category?: string
+  type?: string
+  quantity?: number
   currentQuantity?: number
+  unit: string
+  price?: number
+  supplier?: string
+  minStock?: number
   status?: string
+  notes?: string
+  isConsumable?: boolean
+  projectId?: string
 }
 
 export interface MovementRecord {
   id: string
-  quantity: number
-  timestamp: string
-  type: string
-  location?: string
-  materialName?: string
-  actionType?: string
-  materialType?: string
   userId: string
   materialId: string
   projectId: string
-  user?: User
-  material?: Material
+  quantity: number
+  type: 'entry' | 'exit'
+  timestamp: Date
+  materialName?: string
+  materialType?: string
+  actionType?: 'entrada' | 'saída'
+  location?: string
+  userName?: string
+}
+
+export interface Invite {
+  id: string
+  token: string
+  project: {
+    id: string
+    name: string
+    description?: string
+  }
+  role: string
+  sentBy: {
+    name?: string
+    email: string
+  }
+  expiresAt: string
+  userId: string
 }

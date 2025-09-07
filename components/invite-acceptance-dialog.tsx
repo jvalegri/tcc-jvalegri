@@ -4,22 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, XCircle, Clock } from 'lucide-react'
-
-interface Invite {
-  id: string
-  token: string
-  project: {
-    id: string
-    name: string
-    description?: string
-  }
-  role: string
-  sentBy: {
-    name?: string
-    email: string
-  }
-  expiresAt: string
-}
+import { Invite } from '@/lib/types'
 
 interface InviteAcceptanceDialogProps {
   invites: Invite[]

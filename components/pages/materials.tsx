@@ -155,7 +155,7 @@ export function Materials() {
                     <TableCell>
                       {material.quantity} {material.unit}
                     </TableCell>
-                    <TableCell>R$ {material.price.toFixed(2)}</TableCell>
+                    <TableCell>R$ {(material.price || 0).toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusColor(material.status || "Em Estoque")}>{material.status || "Em Estoque"}</Badge>
                     </TableCell>

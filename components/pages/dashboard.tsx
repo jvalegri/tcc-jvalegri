@@ -30,7 +30,7 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   const uniqueTypes = [...new Set(materials.map(m => m.category))].length
-  const lowStockMaterials = materials.filter((m) => m.quantity <= m.minStock).length
+  const lowStockMaterials = materials.filter((m) => (m.quantity || 0) <= (m.minStock || 0)).length
   const recentMovements = movements.slice(0, 5)
 
   return (
@@ -126,7 +126,7 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
             <div className="space-y-3">
               <TooltipProvider>
                 {materials
-                  .filter((m) => m.quantity <= m.minStock)
+                  .filter((m) => (m.quantity || 0) <= (m.minStock || 0))
                   .slice(0, 5)
                   .map((material) => (
                     <Tooltip key={material.id}>
@@ -166,14 +166,14 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
                             <div className="flex justify-between">
                               <span className="font-medium">Deficit:</span>
                               <span className="text-red-600 font-semibold">
-                                {Math.max(0, material.minStock - material.quantity)} {material.unit}
+                                {Math.max(0, (material.minStock || 0) - (material.quantity || 0))} {material.unit}
                               </span>
                             </div>
-                            {material.price > 0 && (
+                            {(material.price || 0) > 0 && (
                               <div className="flex justify-between">
                                 <span className="font-medium">Preço Unitário:</span>
                                 <span className="text-green-600 font-semibold">
-                                  R$ {material.price.toFixed(2)}
+                                  R$ {(material.price || 0).toFixed(2)}
                                 </span>
                               </div>
                             )}
@@ -186,7 +186,7 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
                     </Tooltip>
                   ))}
               </TooltipProvider>
-              {materials.filter((m) => m.quantity <= m.minStock).length === 0 && (
+              {materials.filter((m) => (m.quantity || 0) <= (m.minStock || 0)).length === 0 && (
                 <p className="text-muted-foreground text-center py-4">Nenhum material com estoque baixo</p>
               )}
             </div>
@@ -202,9 +202,9 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
               {recentMovements.map((movement) => (
                 <div key={movement.id} className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">{movement.materialName}</p>
+                    <p className="font-medium">{movement.materialName || 'Material'}</p>
                     <p className="text-sm text-muted-foreground">
-                      {movement.actionType === "entrada" ? "Entrada" : "Saída"} - {movement.location}
+                      {movement.actionType === "entrada" ? "Entrada" : "Saída"} - {movement.location || 'Local'}
                     </p>
                   </div>
                   <Badge variant={movement.actionType === "entrada" ? "default" : "secondary"}>

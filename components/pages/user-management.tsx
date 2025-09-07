@@ -94,7 +94,7 @@ export function UserManagement({ projectId, currentUserRole, currentUserId }: Us
           description: "O convite foi enviado com sucesso!",
         })
         
-        setInviteData({ name: "", email: "", role: "COLABORADOR" })
+        setInviteData({ name: "", email: "", role: UserRole.COLABORADOR })
         setShowInviteDialog(false)
         fetchInvites()
       } else {
@@ -284,7 +284,7 @@ export function UserManagement({ projectId, currentUserRole, currentUserId }: Us
                           id={`status-${member.id}`}
                           checked={member.status === "ATIVO"}
                           onCheckedChange={() => handleToggleUserStatus(member.id, member.status)}
-                          disabled={member.user?.role === "GESTOR"} // Não pode desativar gestores
+                          disabled={member.role === "GESTOR"} // Não pode desativar gestores
                         />
                       </div>
                       

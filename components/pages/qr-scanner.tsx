@@ -143,8 +143,8 @@ export function QRScanner() {
       const oldQuantity = foundMaterial.quantity
       const newQuantity =
         stockUpdate.type === "adicionar"
-          ? oldQuantity + delta
-          : Math.max(0, oldQuantity - delta)
+          ? (oldQuantity || 0) + delta
+          : Math.max(0, (oldQuantity || 0) - delta)
 
       const { addMovement, currentProjectId, currentUserId } = useMaterialStore.getState()
       

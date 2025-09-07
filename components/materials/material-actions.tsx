@@ -143,11 +143,11 @@ export function MaterialActions({ material }: MaterialActionsProps) {
               </div>
               <div>
                 <h4 className="font-semibold">Preço Unitário</h4>
-                <p>R$ {material.price.toFixed(2)}</p>
+                <p>R$ {material.price?.toFixed(2) || '0.00'}</p>
               </div>
               <div>
                 <h4 className="font-semibold">Valor Total</h4>
-                <p>R$ {(material.price * material.quantity).toFixed(2)}</p>
+                <p>R$ {((material.price || 0) * (material.quantity || 0)).toFixed(2)}</p>
               </div>
               <div>
                 <h4 className="font-semibold">Estoque Mínimo</h4>
@@ -158,8 +158,8 @@ export function MaterialActions({ material }: MaterialActionsProps) {
               <div>
                 <h4 className="font-semibold">Status do Estoque</h4>
                 <p>
-                  {material.quantity <= material.minStock
-                    ? material.quantity === 0
+                  {(material.quantity || 0) <= (material.minStock || 0)
+                    ? (material.quantity || 0) === 0
                       ? "Sem Estoque"
                       : "Estoque Baixo"
                     : "Em Estoque"}

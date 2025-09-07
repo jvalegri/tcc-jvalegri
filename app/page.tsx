@@ -16,6 +16,7 @@ import Signup from "@/components/pages/signup"
 import ProjectSelection from "@/components/pages/project-selection"
 import Login from "@/components/pages/login"
 import { UserManagement } from "@/components/pages/user-management"
+import { UserRole } from "@/lib/types"
 
 type User = {
   id: string
@@ -260,7 +261,7 @@ export default function App() {
         return user && selectedProject ? (
           <UserManagement 
             projectId={selectedProject.id}
-            currentUserRole={(user.projectRole || user.role || "COLABORADOR") as "GESTOR" | "COLABORADOR"}
+            currentUserRole={(user.projectRole || user.role || "COLABORADOR") as UserRole}
             currentUserId={user.id}
           />
         ) : (
@@ -302,7 +303,7 @@ export default function App() {
                 setSidebarOpen={setSidebarOpen}
                 onLogout={handleLogout}
                 onBackToProjects={handleBackToProjects}
-                currentUserRole={(user.projectRole || user.role || "COLABORADOR") as "GESTOR" | "COLABORADOR"}
+                currentUserRole={(user.projectRole || user.role || "COLABORADOR") as UserRole}
                 projectName={selectedProject?.name}
               />
 

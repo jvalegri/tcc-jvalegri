@@ -5,27 +5,11 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
 import { InviteAcceptanceDialog } from "@/components/invite-acceptance-dialog"
+import { Invite } from "@/lib/types"
 
 type Props = {
   onLogin: (user: { id: string; email: string; name?: string; projects?: any[] }) => void
   goToSignup: () => void
-}
-
-interface Invite {
-  id: string
-  token: string
-  project: {
-    id: string
-    name: string
-    description?: string
-  }
-  role: string
-  sentBy: {
-    name?: string
-    email: string
-  }
-  expiresAt: string
-  userId: string
 }
 
 export default function Login({ onLogin, goToSignup }: Props) {

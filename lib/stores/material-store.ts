@@ -208,7 +208,7 @@ export const useMaterialStore = create<MaterialStore>((set, get) => ({
         set((state) => ({
           materials: state.materials.map((m) =>
             m.id === movement.materialId
-              ? { ...m, quantity: m.quantity + movement.quantity }
+              ? { ...m, quantity: (m.quantity || 0) + movement.quantity }
               : m
           ),
         }))
@@ -216,7 +216,7 @@ export const useMaterialStore = create<MaterialStore>((set, get) => ({
         set((state) => ({
           materials: state.materials.map((m) =>
             m.id === movement.materialId
-              ? { ...m, quantity: Math.max(0, m.quantity - movement.quantity) }
+              ? { ...m, quantity: Math.max(0, (m.quantity || 0) - movement.quantity) }
               : m
           ),
         }))
