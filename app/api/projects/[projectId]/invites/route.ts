@@ -2,8 +2,45 @@ import { NextRequest, NextResponse } from "next/server"
 import { sendProjectInviteEmail } from "@/lib/email-service"
 import crypto from "crypto"
 
-// Configuração para evitar build estático
 export const dynamic = 'force-dynamic'
+
+export async function GET(request: NextRequest, { params }: { params: { projectId: string } }) {
+  try {
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
+
+    try {
+      const invites = await prisma.projectInvite.findMany({
+        where: {
+          projectId: params.projectId
+        },
+        include: {
+          sentBy: {
+            select: {
+              name: true,
+              email: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      })
+
+      return NextResponse.json(invites)
+
+    } finally {
+      await prisma.$disconnect()
+    }
+
+  } catch (error) {
+    console.error("Erro ao buscar convites:", error)
+    return NextResponse.json(
+      { message: "Erro interno do servidor" },
+      { status: 500 }
+    )
+  }
+}
 
 export async function POST(request: NextRequest, { params }: { params: { projectId: string } }) {
   try {
@@ -17,22 +54,45 @@ export async function POST(request: NextRequest, { params }: { params: { project
       )
     }
 
-    // Importar Prisma apenas quando necessário (runtime)
     const { PrismaClient } = await import('@prisma/client')
     const prisma = new PrismaClient()
 
     try {
-      // Verificar se já existe um convite para este email e projeto
+      // Primeiro, limpar convites expirados para este projeto
+      await prisma.projectInvite.updateMany({
+        where: {
+          projectId: params.projectId,
+          expiresAt: {
+            lt: new Date()
+          },
+          status: "PENDENTE"
+        },
+        data: {
+          status: "EXPIRADO"
+        }
+      })
+
+      // Verificar se já existe um convite pendente para este email e projeto
       const existingInvite = await prisma.projectInvite.findFirst({
         where: {
           projectId: params.projectId,
-          email: email.toLowerCase()
+          email: email.toLowerCase(),
+          status: "PENDENTE",
+          expiresAt: {
+            gt: new Date()
+          }
         }
+      })
+
+      console.log('Verificando convite existente:', {
+        projectId: params.projectId,
+        email: email.toLowerCase(),
+        existingInvite: existingInvite ? existingInvite.id : null
       })
 
       if (existingInvite) {
         return NextResponse.json(
-          { message: "Já existe um convite para este email neste projeto" },
+          { message: "Já existe um convite pendente para este email neste projeto" },
           { status: 409 }
         )
       }
@@ -94,6 +154,13 @@ export async function POST(request: NextRequest, { params }: { params: { project
           userId: existingUser.id,
           status: "PENDENTE"
         }
+      })
+
+      console.log('Convite criado:', {
+        id: invite.id,
+        email: invite.email,
+        projectId: invite.projectId,
+        status: invite.status
       })
 
       // Enviar e-mail de convite
