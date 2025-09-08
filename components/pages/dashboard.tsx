@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { MobileDialog, MobileDialogContent, MobileDialogHeader, MobileDialogTitle, MobileDialogTrigger } from "@/components/ui/mobile-dialog"
 import { MaterialForm } from "@/components/forms/material-form"
+import { MaterialDashboardCharts } from "@/components/charts/material-dashboard-charts"
 import {
   Tooltip,
   TooltipContent,
@@ -73,6 +74,9 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dashboard Visual com Gráficos */}
+      <MaterialDashboardCharts materials={materials} movements={movements} />
 
       {/* Quick Actions */}
       <Card>
