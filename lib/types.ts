@@ -77,6 +77,7 @@ export interface MovementRecord {
   actionType?: 'entrada' | 'saída'
   location?: string
   userName?: string
+  justification?: string
 }
 
 export interface Invite {
