@@ -31,50 +31,10 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
   const { materials, movements } = useMaterialStore()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
-  const uniqueTypes = [...new Set(materials.map(m => m.category))].length
-  const lowStockMaterials = materials.filter((m) => (m.quantity || 0) <= (m.minStock || 0)).length
   const recentMovements = movements.slice(0, 5)
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tipos de Materiais</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{uniqueTypes}</div>
-            <p className="text-xs text-muted-foreground">
-              Tipos diferentes de materiais registrados
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{lowStockMaterials}</div>
-            <p className="text-xs text-muted-foreground">Requer atenção</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Movimentações</CardTitle>
-            <FileText className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{movements.length}</div>
-            <p className="text-xs text-muted-foreground">Total registradas</p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Dashboard Visual com Gráficos */}
       <MaterialDashboardCharts materials={materials} movements={movements} />
 
