@@ -67,33 +67,41 @@ export function QRScanner() {
         return
       }
 
-    setIsScanning(true)
+      setIsScanning(true)
 
-    const scanner = new Html5Qrcode("qr-reader")
-    scannerRef.current = scanner
+      const scanner = new Html5Qrcode("qr-reader")
+      scannerRef.current = scanner
 
-    scanner
-      .start(
-        cameraId,
-        { fps: 10, qrbox: 250 },
-        async (decodedText: string) => {
-          await scanner.stop()
-          await scanner.clear()
-          scannerRef.current = null
+      scanner
+        .start(
+          cameraId,
+          { fps: 10, qrbox: 250 },
+          async (decodedText: string) => {
+            await scanner.stop()
+            await scanner.clear()
+            scannerRef.current = null
+            setIsScanning(false)
+            setScannedCode("")
+            handleScanCode(decodedText)
+          },
+          () => {}
+        )
+        .catch((err) => {
+          toast({
+            title: "Erro ao iniciar câmera",
+            description: String(err),
+            variant: "destructive",
+          })
           setIsScanning(false)
-          setScannedCode("")
-          handleScanCode(decodedText)
-        },
-        () => {}
-      )
-      .catch((err) => {
-        toast({
-          title: "Erro ao iniciar câmera",
-          description: String(err),
-          variant: "destructive",
         })
-        setIsScanning(false)
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao acessar câmeras do dispositivo.",
+        variant: "destructive",
       })
+      setIsScanning(false)
+    }
   }
 
   const handleScanCode = (code: string) => {
