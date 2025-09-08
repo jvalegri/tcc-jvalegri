@@ -19,19 +19,34 @@ export default function Login({ onLogin, goToSignup }: Props) {
   const [loading, setLoading] = useState(false)
   const [pendingInvites, setPendingInvites] = useState<Invite[]>([])
   const [showInviteDialog, setShowInviteDialog] = useState(false)
+  const [userData, setUserData] = useState<any>(null)
 
-  const checkPendingInvites = async (userId: string) => {
+  const checkPendingInvites = async (userId: string): Promise<boolean> => {
     try {
+      console.log('Verificando convites pendentes para userId:', userId)
       const response = await fetch(`/api/invites/pending?userId=${userId}`)
+      console.log('Resposta da API:', response.status)
+      
       if (response.ok) {
         const invites = await response.json()
+        console.log('Convites recebidos:', invites)
+        
         if (invites.length > 0) {
+          console.log('Mostrando popup de convites')
           setPendingInvites(invites)
           setShowInviteDialog(true)
+          return true
+        } else {
+          console.log('Nenhum convite pendente encontrado')
+          return false
         }
+      } else {
+        console.error('Erro na API de convites:', response.status)
+        return false
       }
     } catch (error) {
       console.error('Erro ao verificar convites pendentes:', error)
+      return false
     }
   }
 
@@ -54,6 +69,12 @@ export default function Login({ onLogin, goToSignup }: Props) {
 
       // Atualizar a lista de convites pendentes
       setPendingInvites(prev => prev.filter(i => i.id !== invite.id))
+      
+      // Se não há mais convites pendentes e temos dados do usuário, fazer login
+      if (pendingInvites.length === 1 && userData) {
+        onLogin(userData)
+        setUserData(null)
+      }
     } catch (error) {
       console.error('Erro ao aceitar convite:', error)
       throw error
@@ -65,6 +86,12 @@ export default function Login({ onLogin, goToSignup }: Props) {
       // Por enquanto, apenas remove da lista local
       // Você pode implementar uma rota para recusar convites se necessário
       setPendingInvites(prev => prev.filter(i => i.id !== invite.id))
+      
+      // Se não há mais convites pendentes e temos dados do usuário, fazer login
+      if (pendingInvites.length === 1 && userData) {
+        onLogin(userData)
+        setUserData(null)
+      }
     } catch (error) {
       console.error('Erro ao recusar convite:', error)
       throw error
@@ -99,10 +126,15 @@ export default function Login({ onLogin, goToSignup }: Props) {
         // Verificar se o usuário tem dados válidos
         if (user && user.id && user.email) {
           // Verificar convites pendentes antes de fazer login
-          await checkPendingInvites(user.id)
+          const hasInvites = await checkPendingInvites(user.id)
           
-          // Chama onLogin somente se o login for bem-sucedido
-          onLogin(user)
+          // Se não houver convites pendentes, fazer login imediatamente
+          if (!hasInvites) {
+            onLogin(user)
+          } else {
+            // Se houver convites, armazenar dados do usuário para login após aceitar/recusar
+            setUserData(user)
+          }
         } else {
           setError("Resposta inválida do servidor.")
         }

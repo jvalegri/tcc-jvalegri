@@ -7,7 +7,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
 
+    console.log('API /api/invites/pending - userId:', userId)
+
     if (!userId) {
+      console.log('Erro: userId não fornecido')
       return NextResponse.json(
         { message: "ID do usuário é obrigatório" },
         { status: 400 }
@@ -44,6 +47,8 @@ export async function GET(request: NextRequest) {
         }
       })
 
+      console.log('Convites encontrados no banco:', pendingInvites.length)
+
       const invites = pendingInvites.map(invite => ({
         id: invite.id,
         token: invite.token,
@@ -53,6 +58,8 @@ export async function GET(request: NextRequest) {
         expiresAt: invite.expiresAt,
         userId: invite.userId
       }))
+
+      console.log('Convites formatados:', invites)
 
       return NextResponse.json(invites)
 
