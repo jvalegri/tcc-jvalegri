@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { MobileDialog, MobileDialogContent, MobileDialogHeader, MobileDialogTitle, MobileDialogTrigger } from "@/components/ui/mobile-dialog"
 import { MaterialForm } from "@/components/forms/material-form"
 import { MaterialActions } from "@/components/materials/material-actions"
 import { useMaterialStore } from "@/lib/stores/material-store"
@@ -51,20 +52,22 @@ export function Materials() {
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <h1 className="text-2xl font-bold">Materiais</h1>
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
+        <MobileDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <MobileDialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Adicionar Material
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Adicionar Novo Material</DialogTitle>
-            </DialogHeader>
-            <MaterialForm onSuccess={() => setIsAddDialogOpen(false)} />
-          </DialogContent>
-        </Dialog>
+          </MobileDialogTrigger>
+          <MobileDialogContent className="max-w-2xl">
+            <MobileDialogHeader>
+              <MobileDialogTitle>Adicionar Novo Material</MobileDialogTitle>
+            </MobileDialogHeader>
+            <div className="px-6 pb-6">
+              <MaterialForm onSuccess={() => setIsAddDialogOpen(false)} />
+            </div>
+          </MobileDialogContent>
+        </MobileDialog>
       </div>
 
       {/* Search and Filters */}

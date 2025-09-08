@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { MobileDialog, MobileDialogContent, MobileDialogHeader, MobileDialogTitle } from "@/components/ui/mobile-dialog"
 import { MaterialForm } from "@/components/forms/material-form"
 import { MoreHorizontal, Eye, QrCode, Edit, Download, Trash2 } from "lucide-react"
 import { useMaterialStore } from "@/lib/stores/material-store"
@@ -106,14 +107,16 @@ export function MaterialActions({ material }: MaterialActionsProps) {
       </DropdownMenu>
 
       {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Editar Material</DialogTitle>
-          </DialogHeader>
-          <MaterialForm material={material} onSuccess={() => setIsEditDialogOpen(false)} />
-        </DialogContent>
-      </Dialog>
+      <MobileDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <MobileDialogContent className="max-w-2xl">
+          <MobileDialogHeader>
+            <MobileDialogTitle>Editar Material</MobileDialogTitle>
+          </MobileDialogHeader>
+          <div className="px-6 pb-6">
+            <MaterialForm material={material} onSuccess={() => setIsEditDialogOpen(false)} />
+          </div>
+        </MobileDialogContent>
+      </MobileDialog>
 
       {/* Details Dialog */}
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
