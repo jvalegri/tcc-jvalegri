@@ -24,7 +24,7 @@ export function Movements() {
       (movement.location?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (movement.actionType?.toLowerCase().includes(searchTerm.toLowerCase()) || movement.type?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
 
-    const matchesDate = !dateFilter || new Date(movement.date || movement.timestamp).toISOString().split("T")[0] === dateFilter
+    const matchesDate = !dateFilter || new Date(movement.timestamp).toISOString().split("T")[0] === dateFilter
 
     return matchesSearch && matchesDate
   })
@@ -35,14 +35,14 @@ export function Movements() {
       headers.join(","),
       ...filteredMovements.map((m) =>
         [
-          new Date(m.date || m.timestamp).toLocaleDateString("pt-BR"),
+          new Date(m.timestamp).toLocaleDateString("pt-BR"),
           m.materialName,
-          m.materialType || m.materialCategory,
+          m.materialType,
           m.actionType === "entrada" ? "Entrada" : "Saída",
           m.quantity,
           m.userName || "N/A",
           m.location,
-          m.justification || "N/A",
+          "N/A",
         ].join(","),
       ),
     ].join("\n")
@@ -65,14 +65,14 @@ export function Movements() {
     const txtContent = filteredMovements
       .map(
         (m) =>
-          `Data: ${new Date(m.date || m.timestamp).toLocaleDateString("pt-BR")}\n` +
+          `Data: ${new Date(m.timestamp).toLocaleDateString("pt-BR")}\n` +
           `Material: ${m.materialName}\n` +
-          `Categoria: ${m.materialType || m.materialCategory}\n` +
+          `Categoria: ${m.materialType}\n` +
           `Tipo: ${m.actionType === "entrada" ? "Entrada" : "Saída"}\n` +
           `Quantidade: ${m.quantity}\n` +
           `Usuário Responsável: ${m.userName || "N/A"}\n` +
           `Local: ${m.location}\n` +
-          `Justificativa: ${m.justification || "N/A"}\n` +
+          `Justificativa: N/A\n` +
           `${"=".repeat(50)}\n`,
       )
       .join("\n")
@@ -187,9 +187,9 @@ export function Movements() {
                   <TableBody>
                     {filteredMovements.map((movement) => (
                       <TableRow key={movement.id}>
-                        <TableCell>{new Date(movement.date || movement.timestamp).toLocaleDateString("pt-BR")}</TableCell>
+                        <TableCell>{new Date(movement.timestamp).toLocaleDateString("pt-BR")}</TableCell>
                         <TableCell className="font-medium">{movement.materialName || "N/A"}</TableCell>
-                        <TableCell>{movement.materialType || movement.materialCategory || "N/A"}</TableCell>
+                        <TableCell>{movement.materialType || "N/A"}</TableCell>
                         <TableCell>
                           <Badge variant={movement.actionType === "entrada" ? "default" : "secondary"}>
                             {movement.actionType === "entrada" ? "Entrada" : "Saída"}
@@ -198,7 +198,7 @@ export function Movements() {
                         <TableCell>{movement.quantity}</TableCell>
                         <TableCell>{movement.userName || "N/A"}</TableCell>
                         <TableCell>{movement.location || "N/A"}</TableCell>
-                        <TableCell>{movement.justification || "N/A"}</TableCell>
+                        <TableCell>N/A</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
