@@ -38,21 +38,25 @@ interface MaterialDashboardChartsProps {
 }
 
 export function MaterialDashboardCharts({ materials, movements }: MaterialDashboardChartsProps) {
+  // Validar dados de entrada
+  const safeMaterials = materials || []
+  const safeMovements = movements || []
+  
   // Calcular métricas financeiras
-  const totalValue = materials.reduce((sum, material) => 
+  const totalValue = safeMaterials.reduce((sum, material) => 
     sum + ((material.quantity || 0) * (material.price || 0)), 0
   )
 
-  const lowStockCount = materials.filter(material => 
+  const lowStockCount = safeMaterials.filter(material => 
     (material.quantity || 0) <= (material.minStock || 0)
   ).length
 
-  const totalMovements = movements.length
-  const entryMovements = movements.filter(m => m.actionType === 'entrada').length
-  const exitMovements = movements.filter(m => m.actionType === 'saída').length
+  const totalMovements = safeMovements.length
+  const entryMovements = safeMovements.filter(m => m.actionType === 'entrada').length
+  const exitMovements = safeMovements.filter(m => m.actionType === 'saída').length
 
   // Dados para gráfico de valor por categoria
-  const categoryData = materials.reduce((acc, material) => {
+  const categoryData = safeMaterials.reduce((acc, material) => {
     const category = material.category || 'Outros'
     const value = (material.quantity || 0) * (material.price || 0)
     
@@ -75,18 +79,24 @@ export function MaterialDashboardCharts({ materials, movements }: MaterialDashbo
   }).reverse()
 
   const monthlyMovements = last6Months.map(month => {
-    const monthMovements = movements.filter(movement => {
-      const movementDate = new Date(movement.timestamp).toISOString().slice(0, 7)
-      return movementDate === month
+    const monthMovements = safeMovements.filter(movement => {
+      if (!movement.timestamp) return false
+      try {
+        const movementDate = new Date(movement.timestamp).toISOString().slice(0, 7)
+        return movementDate === month
+      } catch (error) {
+        console.warn('Data inválida encontrada:', movement.timestamp)
+        return false
+      }
     })
     return monthMovements.length
   })
 
   // Dados para gráfico de status de estoque
   const stockStatusData = {
-    'Em Estoque': materials.filter(m => (m.quantity || 0) > (m.minStock || 0)).length,
-    'Estoque Baixo': materials.filter(m => (m.quantity || 0) <= (m.minStock || 0) && (m.quantity || 0) > 0).length,
-    'Sem Estoque': materials.filter(m => (m.quantity || 0) === 0).length,
+    'Em Estoque': safeMaterials.filter(m => (m.quantity || 0) > (m.minStock || 0)).length,
+    'Estoque Baixo': safeMaterials.filter(m => (m.quantity || 0) <= (m.minStock || 0) && (m.quantity || 0) > 0).length,
+    'Sem Estoque': safeMaterials.filter(m => (m.quantity || 0) === 0).length,
   }
 
   // Configurações dos gráficos
@@ -197,7 +207,7 @@ export function MaterialDashboardCharts({ materials, movements }: MaterialDashbo
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total de Materiais</p>
-                <p className="text-2xl font-bold">{materials.length}</p>
+                <p className="text-2xl font-bold">{safeMaterials.length}</p>
               </div>
               <Package className="h-8 w-8 text-blue-600" />
             </div>
