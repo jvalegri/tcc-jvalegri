@@ -108,11 +108,13 @@ export function MaterialActions({ material }: MaterialActionsProps) {
 
       {/* Edit Dialog */}
       <MobileDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <MobileDialogContent className="max-w-2xl">
-          <MobileDialogHeader>
-            <MobileDialogTitle>Editar Material</MobileDialogTitle>
-          </MobileDialogHeader>
-          <div className="px-6 pb-6">
+        <MobileDialogContent className="max-w-2xl flex flex-col">
+          <div className="flex-shrink-0 p-6 pb-4 border-b">
+            <MobileDialogHeader>
+              <MobileDialogTitle>Editar Material</MobileDialogTitle>
+            </MobileDialogHeader>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6 pt-4">
             <MaterialForm material={material} onSuccess={() => setIsEditDialogOpen(false)} />
           </div>
         </MobileDialogContent>

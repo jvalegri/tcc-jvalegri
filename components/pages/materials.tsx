@@ -59,11 +59,13 @@ export function Materials() {
               Adicionar Material
             </Button>
           </MobileDialogTrigger>
-          <MobileDialogContent className="max-w-2xl">
-            <MobileDialogHeader>
-              <MobileDialogTitle>Adicionar Novo Material</MobileDialogTitle>
-            </MobileDialogHeader>
-            <div className="px-6 pb-6">
+          <MobileDialogContent className="max-w-2xl flex flex-col">
+            <div className="flex-shrink-0 p-6 pb-4 border-b">
+              <MobileDialogHeader>
+                <MobileDialogTitle>Adicionar Novo Material</MobileDialogTitle>
+              </MobileDialogHeader>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 pt-4">
               <MaterialForm onSuccess={() => setIsAddDialogOpen(false)} />
             </div>
           </MobileDialogContent>
