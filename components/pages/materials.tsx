@@ -58,7 +58,7 @@ export function Materials() {
               Adicionar Material
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Adicionar Novo Material</DialogTitle>
             </DialogHeader>
