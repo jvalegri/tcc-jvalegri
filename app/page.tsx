@@ -48,16 +48,21 @@ export default function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        console.log("Inicializando app...")
         const savedUser = localStorage.getItem('user')
         const savedProject = localStorage.getItem('selectedProject')
         const savedPage = localStorage.getItem('currentPage')
 
+        console.log("Dados salvos:", { savedUser: !!savedUser, savedProject: !!savedProject, savedPage })
+
         if (savedUser) {
           const userData = JSON.parse(savedUser)
+          console.log("Usuário encontrado:", userData.email)
           setUser(userData)
           
           if (savedProject) {
             const projectData = JSON.parse(savedProject)
+            console.log("Projeto encontrado:", projectData.name)
             setSelectedProject(projectData)
             setCurrentProjectId(projectData.id)
             setCurrentUserId(userData.id)
@@ -66,6 +71,7 @@ export default function App() {
             try {
               await fetchMaterials(projectData.id)
               await fetchMovements(projectData.id)
+              console.log("Dados do projeto recarregados")
             } catch (error) {
               console.error("Erro ao recarregar dados do projeto:", error)
             }
@@ -73,12 +79,18 @@ export default function App() {
           
           // Definir página baseada no que estava salvo
           if (savedPage && savedPage !== "login" && savedPage !== "signup") {
+            console.log("Restaurando página:", savedPage)
             setCurrentPage(savedPage)
           } else if (savedProject) {
+            console.log("Indo para dashboard")
             setCurrentPage("dashboard")
           } else {
+            console.log("Indo para projetos")
             setCurrentPage("projects")
           }
+        } else {
+          console.log("Nenhum usuário salvo, indo para login")
+          setCurrentPage("login")
         }
       } catch (error) {
         console.error("Erro ao inicializar app:", error)
@@ -89,11 +101,12 @@ export default function App() {
         setCurrentPage("login")
       } finally {
         setIsInitialized(true)
+        console.log("Inicialização concluída")
       }
     }
 
     initializeApp()
-  }, [])
+  }, [fetchMaterials, fetchMovements, setCurrentProjectId, setCurrentUserId])
 
   // Salvar estado no localStorage quando mudar
   useEffect(() => {
@@ -378,7 +391,14 @@ export default function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <TooltipProvider>
         <div className="flex h-screen bg-background">
-          {user && selectedProject && currentPage !== "login" && currentPage !== "signup" && currentPage !== "projects" ? (
+          {!isInitialized ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Carregando...</p>
+              </div>
+            </div>
+          ) : user && selectedProject && currentPage !== "login" && currentPage !== "signup" && currentPage !== "projects" ? (
             <>
               <Sidebar
                 currentPage={currentPage}
