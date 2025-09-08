@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { MobileDialog, MobileDialogContent, MobileDialogHeader, MobileDialogTitle, MobileDialogTrigger } from "@/components/ui/mobile-dialog"
 import { MaterialForm } from "@/components/forms/material-form"
 import {
   Tooltip,
@@ -80,20 +81,24 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
+            <MobileDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <MobileDialogTrigger asChild>
                 <Button className="h-20 flex flex-col gap-2">
                   <Plus className="h-6 w-6" />
                   Adicionar Material
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Adicionar Novo Material</DialogTitle>
-                </DialogHeader>
-                <MaterialForm onSuccess={() => setIsAddDialogOpen(false)} />
-              </DialogContent>
-            </Dialog>
+              </MobileDialogTrigger>
+              <MobileDialogContent className="max-w-2xl flex flex-col">
+                <div className="flex-shrink-0 p-6 pb-4 border-b">
+                  <MobileDialogHeader>
+                    <MobileDialogTitle>Adicionar Novo Material</MobileDialogTitle>
+                  </MobileDialogHeader>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6 pt-4">
+                  <MaterialForm onSuccess={() => setIsAddDialogOpen(false)} />
+                </div>
+              </MobileDialogContent>
+            </MobileDialog>
 
             <Button
               variant="outline"
