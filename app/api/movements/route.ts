@@ -51,11 +51,11 @@ export async function GET(request: NextRequest) {
         actionType: movement.type === 'entry' ? 'entrada' : 'saída',
         materialId: movement.materialId,
         materialName: movement.material.name,
-        materialCategory: movement.material.type || 'Geral',
+        materialType: movement.material.type || 'Geral',
         quantity: movement.quantity,
-        date: movement.timestamp,
-        location: 'Local do Projeto', // Campo não existe no schema atual
-        justification: 'Movimentação de estoque' // Campo não existe no schema atual
+        timestamp: movement.timestamp,
+        location: 'Depósito Central', // Valor padrão
+        justification: 'Movimentação de estoque' // Valor padrão
       }))
 
       return NextResponse.json(transformedMovements)

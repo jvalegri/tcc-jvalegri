@@ -19,6 +19,7 @@ export function QRScanner() {
   const [stockUpdate, setStockUpdate] = useState({
     type: "adicionar" as "adicionar" | "remover",
     quantity: "",
+    justification: "", // Campo obrigatório
   })
 
   const scannerRef = useRef<Html5Qrcode | null>(null)
@@ -39,15 +40,32 @@ export function QRScanner() {
   }, [])
 
   const startCameraScan = async () => {
-    const cameraId = await Html5Qrcode.getCameras().then(cameras => cameras[0]?.id)
-    if (!cameraId) {
-      toast({
-        title: "Erro",
-        description: "Nenhuma câmera foi detectada no dispositivo.",
-        variant: "destructive",
-      })
-      return
-    }
+    try {
+      const cameras = await Html5Qrcode.getCameras()
+      
+      // Priorizar câmera traseira no mobile
+      let cameraId = cameras[0]?.id
+      
+      // Se há múltiplas câmeras, tentar encontrar a traseira
+      if (cameras.length > 1) {
+        const backCamera = cameras.find(camera => 
+          camera.label.toLowerCase().includes('back') || 
+          camera.label.toLowerCase().includes('rear') ||
+          camera.label.toLowerCase().includes('environment')
+        )
+        if (backCamera) {
+          cameraId = backCamera.id
+        }
+      }
+      
+      if (!cameraId) {
+        toast({
+          title: "Erro",
+          description: "Nenhuma câmera foi detectada no dispositivo.",
+          variant: "destructive",
+        })
+        return
+      }
 
     setIsScanning(true)
 
@@ -138,6 +156,16 @@ export function QRScanner() {
       return
     }
 
+    // Validar justificativa
+    if (!stockUpdate.justification.trim()) {
+      toast({
+        title: "Erro",
+        description: "Justificativa é obrigatória para registrar a movimentação.",
+        variant: "destructive",
+      })
+      return
+    }
+
     try {
       const delta = quantityValue
       const oldQuantity = foundMaterial.quantity
@@ -168,7 +196,7 @@ export function QRScanner() {
         materialCategory: foundMaterial.category,
         quantity: quantityValue,
         location: "Depósito Central",
-        justification: "Ajuste via QR Scanner",
+        justification: stockUpdate.justification.trim(),
       }, currentProjectId, currentUserId)
 
       toast({
@@ -281,7 +309,7 @@ export function QRScanner() {
           if (!open) {
             setFoundMaterial(null)
             setScannedCode("")
-            setStockUpdate(prev => ({ ...prev, quantity: "" }))
+            setStockUpdate(prev => ({ ...prev, quantity: "", justification: "" }))
           }
         }}
       >
@@ -325,6 +353,26 @@ export function QRScanner() {
                     Digite apenas números. Use vírgula ou ponto para decimais
                   </p>
                 </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="justification">Justificativa *</Label>
+                <Input
+                  id="justification"
+                  type="text"
+                  value={stockUpdate.justification}
+                  onChange={(e) =>
+                    setStockUpdate((prev) => ({
+                      ...prev,
+                      justification: e.target.value,
+                    }))
+                  }
+                  placeholder="Ex: Compra de estoque, Uso em obra, etc."
+                  required
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Campo obrigatório para registrar a movimentação
+                </p>
               </div>
             </div>
           )}

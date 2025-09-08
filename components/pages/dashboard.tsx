@@ -30,8 +30,23 @@ interface DashboardProps {
 export function Dashboard({ setCurrentPage }: DashboardProps) {
   const { materials, movements } = useMaterialStore()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [daysFilter, setDaysFilter] = useState(7) // Padrão: últimos 7 dias
 
-  const recentMovements = movements.slice(0, 5)
+  // Filtrar movimentações por período
+  const filteredMovements = movements.filter(movement => {
+    if (!movement.timestamp) return false
+    try {
+      const movementDate = new Date(movement.timestamp)
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - daysFilter)
+      return movementDate >= cutoffDate
+    } catch (error) {
+      console.warn('Data inválida encontrada:', movement.timestamp)
+      return false
+    }
+  })
+
+  const recentMovements = filteredMovements.slice(0, 5)
 
   return (
     <div className="space-y-6">
@@ -164,7 +179,19 @@ export function Dashboard({ setCurrentPage }: DashboardProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Movimentações Recentes</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Movimentações Recentes</CardTitle>
+              <select 
+                value={daysFilter} 
+                onChange={(e) => setDaysFilter(Number(e.target.value))}
+                className="px-3 py-1 text-sm border rounded-md bg-background"
+              >
+                <option value={1}>Último dia</option>
+                <option value={7}>Últimos 7 dias</option>
+                <option value={30}>Últimos 30 dias</option>
+                <option value={90}>Últimos 90 dias</option>
+              </select>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
