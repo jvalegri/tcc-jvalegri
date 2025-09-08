@@ -40,8 +40,87 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [isInitialized, setIsInitialized] = useState(false)
   
   const { fetchMaterials, fetchMovements, setCurrentProjectId, clearData, setCurrentUserId } = useMaterialStore()
+
+  // Inicializar estado do localStorage
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        const savedUser = localStorage.getItem('user')
+        const savedProject = localStorage.getItem('selectedProject')
+        const savedPage = localStorage.getItem('currentPage')
+
+        if (savedUser) {
+          const userData = JSON.parse(savedUser)
+          setUser(userData)
+          
+          if (savedProject) {
+            const projectData = JSON.parse(savedProject)
+            setSelectedProject(projectData)
+            setCurrentProjectId(projectData.id)
+            setCurrentUserId(userData.id)
+            
+            // Recarregar dados do projeto
+            try {
+              await fetchMaterials(projectData.id)
+              await fetchMovements(projectData.id)
+            } catch (error) {
+              console.error("Erro ao recarregar dados do projeto:", error)
+            }
+          }
+          
+          // Definir página baseada no que estava salvo
+          if (savedPage && savedPage !== "login" && savedPage !== "signup") {
+            setCurrentPage(savedPage)
+          } else if (savedProject) {
+            setCurrentPage("dashboard")
+          } else {
+            setCurrentPage("projects")
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao inicializar app:", error)
+        // Em caso de erro, limpar localStorage e ir para login
+        localStorage.removeItem('user')
+        localStorage.removeItem('selectedProject')
+        localStorage.removeItem('currentPage')
+        setCurrentPage("login")
+      } finally {
+        setIsInitialized(true)
+      }
+    }
+
+    initializeApp()
+  }, [])
+
+  // Salvar estado no localStorage quando mudar
+  useEffect(() => {
+    if (isInitialized) {
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user))
+      } else {
+        localStorage.removeItem('user')
+      }
+    }
+  }, [user, isInitialized])
+
+  useEffect(() => {
+    if (isInitialized) {
+      if (selectedProject) {
+        localStorage.setItem('selectedProject', JSON.stringify(selectedProject))
+      } else {
+        localStorage.removeItem('selectedProject')
+      }
+    }
+  }, [selectedProject, isInitialized])
+
+  useEffect(() => {
+    if (isInitialized && currentPage !== "login" && currentPage !== "signup") {
+      localStorage.setItem('currentPage', currentPage)
+    }
+  }, [currentPage, isInitialized])
 
   const handleLogin = (userData: User) => {
     // Validar se o usuário tem dados válidos
@@ -145,6 +224,11 @@ export default function App() {
     setSelectedProject(null)
     setCurrentPage("login")
     setSidebarOpen(false)
+    
+    // Limpar localStorage
+    localStorage.removeItem('user')
+    localStorage.removeItem('selectedProject')
+    localStorage.removeItem('currentPage')
     
     // Limpar dados do store
     clearData()

@@ -44,11 +44,20 @@ export default function ProjectSelection({ user, onSelectProject }: Props) {
         
         if (response.ok) {
           const fetchedProjects = await response.json()
-          setProjects(fetchedProjects)
+          console.log('Projetos recebidos:', fetchedProjects)
           
-          // Selecionar o primeiro projeto se existir
-          if (fetchedProjects.length > 0) {
-            setSelected(fetchedProjects[0].id)
+          // Filtrar apenas projetos com nome válido
+          const validProjects = fetchedProjects.filter((project: Project) => 
+            project.name && project.name.trim() !== ''
+          )
+          console.log('Projetos válidos:', validProjects)
+          
+          setProjects(validProjects)
+          
+          // Selecionar o primeiro projeto válido se existir
+          if (validProjects.length > 0) {
+            setSelected(validProjects[0].id)
+            console.log('Projeto selecionado:', validProjects[0].id)
           }
         } else {
           const errorData = await response.json()
@@ -84,12 +93,16 @@ export default function ProjectSelection({ user, onSelectProject }: Props) {
       })
 
       if (response.ok) {
-        const newProject = await response.json()
+        const result = await response.json()
+        console.log('Projeto criado:', result)
+        
+        // A API retorna { message, project, role }
+        const newProject = result.project
         
         // Adicionar o novo projeto à lista
         setProjects(prev => [...prev, newProject])
         
-        // IMPORTANTE: Selecionar o novo projeto ANTES de fechar o dialog
+        // Selecionar o novo projeto
         setSelected(newProject.id)
         
         // Limpar formulário e fechar dialog
@@ -97,13 +110,7 @@ export default function ProjectSelection({ user, onSelectProject }: Props) {
         setNewProjectDescription("")
         setShowCreateDialog(false)
         
-        // Aguardar um tick para garantir que o estado foi atualizado
-        setTimeout(() => {
-          // Verificar se o projeto foi selecionado corretamente
-          if (newProject.id) {
-            console.log("Projeto criado e selecionado:", newProject.id)
-          }
-        }, 0)
+        console.log("Projeto adicionado à lista:", newProject)
       } else {
         const errorData = await response.json()
         setError(errorData.message || "Erro ao criar projeto.")
@@ -166,7 +173,7 @@ export default function ProjectSelection({ user, onSelectProject }: Props) {
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Selecione um projeto:</Label>
                 <div className="grid gap-3">
-                  {projects.map((project) => (
+                  {projects.filter(project => project.name && project.name.trim() !== '').map((project) => (
                     <div
                       key={project.id}
                       className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${
