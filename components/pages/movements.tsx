@@ -21,7 +21,7 @@ export function Movements() {
   const filteredMovements = movements.filter((movement) => {
     const matchesSearch =
       (movement.materialName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (movement.location?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (movement.justification?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (movement.actionType?.toLowerCase().includes(searchTerm.toLowerCase()) || movement.type?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
 
     const matchesDate = !dateFilter || new Date(movement.timestamp).toISOString().split("T")[0] === dateFilter
@@ -30,19 +30,18 @@ export function Movements() {
   })
 
   const exportToCSV = () => {
-    const headers = ["Data", "Material", "Categoria", "Tipo", "Quantidade", "Usuário Responsável", "Local", "Justificativa"]
+    const headers = ["Data/Hora", "Material", "Categoria", "Tipo", "Quantidade", "Usuário Responsável", "Justificativa"]
     const csvContent = [
       headers.join(","),
       ...filteredMovements.map((m) =>
         [
-          new Date(m.timestamp).toLocaleDateString("pt-BR"),
+          new Date(m.timestamp).toLocaleString("pt-BR"),
           m.materialName,
           m.materialType,
           m.actionType === "entrada" ? "Entrada" : "Saída",
           m.quantity,
           m.userName || "N/A",
-          m.location,
-          "N/A",
+          m.justification || "N/A",
         ].join(","),
       ),
     ].join("\n")
@@ -65,14 +64,13 @@ export function Movements() {
     const txtContent = filteredMovements
       .map(
         (m) =>
-          `Data: ${new Date(m.timestamp).toLocaleDateString("pt-BR")}\n` +
+          `Data/Hora: ${new Date(m.timestamp).toLocaleString("pt-BR")}\n` +
           `Material: ${m.materialName}\n` +
           `Categoria: ${m.materialType}\n` +
           `Tipo: ${m.actionType === "entrada" ? "Entrada" : "Saída"}\n` +
           `Quantidade: ${m.quantity}\n` +
           `Usuário Responsável: ${m.userName || "N/A"}\n` +
-          `Local: ${m.location}\n` +
-          `Justificativa: N/A\n` +
+          `Justificativa: ${m.justification || "N/A"}\n` +
           `${"=".repeat(50)}\n`,
       )
       .join("\n")
@@ -174,20 +172,19 @@ export function Movements() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Data</TableHead>
+                      <TableHead>Data/Hora</TableHead>
                       <TableHead>Material</TableHead>
                       <TableHead>Categoria</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Quantidade</TableHead>
                       <TableHead>Usuário Responsável</TableHead>
-                      <TableHead>Local</TableHead>
                       <TableHead>Justificativa</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredMovements.map((movement) => (
                       <TableRow key={movement.id}>
-                        <TableCell>{new Date(movement.timestamp).toLocaleDateString("pt-BR")}</TableCell>
+                        <TableCell>{new Date(movement.timestamp).toLocaleString("pt-BR")}</TableCell>
                         <TableCell className="font-medium">{movement.materialName || "N/A"}</TableCell>
                         <TableCell>{movement.materialType || "N/A"}</TableCell>
                         <TableCell>
@@ -197,8 +194,7 @@ export function Movements() {
                         </TableCell>
                         <TableCell>{movement.quantity}</TableCell>
                         <TableCell>{movement.userName || "N/A"}</TableCell>
-                        <TableCell>{movement.location || "N/A"}</TableCell>
-                        <TableCell>N/A</TableCell>
+                        <TableCell>{movement.justification || "N/A"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
