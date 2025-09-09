@@ -16,6 +16,7 @@ import Signup from "@/components/pages/signup"
 import ProjectSelection from "@/components/pages/project-selection"
 import Login from "@/components/pages/login"
 import { UserManagement } from "@/components/pages/user-management"
+import { DataManagement } from "@/components/pages/data-management"
 import { UserRole } from "@/lib/types"
 
 type User = {
@@ -361,6 +362,20 @@ export default function App() {
             currentUserRole={(user.projectRole || user.role || "COLABORADOR") as UserRole}
             currentUserId={user.id}
           />
+        ) : (
+          <div className="text-center mt-12">
+            <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>
+            <button 
+              onClick={() => setCurrentPage("projects")} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded"
+            >
+              Selecionar Projeto
+            </button>
+          </div>
+        )
+      case "data-management":
+        return user && selectedProject ? (
+          <DataManagement />
         ) : (
           <div className="text-center mt-12">
             <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>

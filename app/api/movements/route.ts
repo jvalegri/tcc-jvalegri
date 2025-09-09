@@ -183,8 +183,9 @@ export async function POST(request: NextRequest) {
       })
 
       // Atualizar quantidade do material
+      let updatedMaterial
       if (movementType === 'entry') {
-        await prisma.material.update({
+        updatedMaterial = await prisma.material.update({
           where: { id: materialId },
           data: {
             currentQuantity: {
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
           }
         })
       } else if (movementType === 'exit') {
-        await prisma.material.update({
+        updatedMaterial = await prisma.material.update({
           where: { id: materialId },
           data: {
             currentQuantity: {
@@ -201,6 +202,34 @@ export async function POST(request: NextRequest) {
             }
           }
         })
+      }
+
+      // Emitir evento para o sistema de notificações
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'movement',
+            data: {
+              type: 'movement',
+              materialId: newMovement.materialId,
+              materialName: newMovement.material.name,
+              materialType: newMovement.material.type,
+              quantity: newMovement.quantity,
+              movementType: newMovement.type,
+              userId: newMovement.userId,
+              userName: newMovement.user.name,
+              projectId: newMovement.projectId,
+              justification: justification,
+              timestamp: newMovement.timestamp,
+              currentStock: updatedMaterial?.currentQuantity || 0,
+              minStock: updatedMaterial?.minStock || 0
+            }
+          })
+        })
+      } catch (error) {
+        console.warn('Erro ao emitir evento de movimentação:', error)
       }
 
       // Retornar movimentação criada no formato esperado pelo frontend

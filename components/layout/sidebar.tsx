@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Package, QrCode, History, X, LogOut, User, Users, FolderOpen } from "lucide-react"
+import { LayoutDashboard, Package, QrCode, History, X, LogOut, User, Users, FolderOpen, Shield } from "lucide-react"
 import { UserRole } from "@/lib/types"
 
 interface SidebarProps {
@@ -22,6 +22,7 @@ const navigation = [
   { id: "scanner", name: "Scanner QR", icon: QrCode, roles: ["GESTOR", "COLABORADOR"] },
   { id: "movements", name: "Movimentações", icon: History, roles: ["GESTOR", "COLABORADOR"] },
   { id: "users", name: "Gestão de Usuários", icon: Users, roles: ["GESTOR"] },
+  { id: "data-management", name: "Gestão de Dados", icon: Shield, roles: ["GESTOR"] },
 ]
 
 export function Sidebar({ currentPage, setCurrentPage, sidebarOpen, setSidebarOpen, onLogout, currentUserRole, projectName, onBackToProjects }: SidebarProps) {
