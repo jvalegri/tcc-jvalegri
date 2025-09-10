@@ -270,6 +270,94 @@ class EmailService {
 
     return await this.sendNotification(testEvent, recipientEmail)
   }
+
+  async sendProjectInviteEmail(params: {
+    to: string
+    name: string
+    projectName: string
+    role: string
+    inviteToken: string
+    userId: string
+  }): Promise<{ success: boolean; messageId?: string }> {
+    if (!this.transporter) {
+      console.error('❌ Transporter não inicializado')
+      return { success: false }
+    }
+
+    try {
+      const { to, name, projectName, role, inviteToken, userId } = params
+      
+      const subject = `Convite para participar do projeto ${projectName}`
+      
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+          <div style="background: #3b82f6; color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">🎉 Você foi convidado!</h1>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">Sistema de Gestão de Materiais</p>
+          </div>
+          
+          <div style="padding: 20px;">
+            <h2 style="color: #374151; margin-top: 0;">👋 Olá, ${name}!</h2>
+            <p>Você foi convidado para participar do projeto <strong>${projectName}</strong> como <strong>${role}</strong>.</p>
+            
+            <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <h3 style="color: #1e40af; margin-top: 0;">📋 Detalhes do Convite:</h3>
+              <p><strong>Projeto:</strong> ${projectName}</p>
+              <p><strong>Função:</strong> ${role}</p>
+              <p><strong>Convidado por:</strong> Sistema de Gestão</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://estock.vercel.app'}/api/invites/accept?token=${inviteToken}&userId=${userId}" 
+                 style="background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                ✅ Aceitar Convite
+              </a>
+            </div>
+            
+            <div style="background: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+              <p><strong>💡 Como aceitar:</strong></p>
+              <ol>
+                <li>Clique no botão "Aceitar Convite" acima</li>
+                <li>Faça login na sua conta</li>
+                <li>O projeto aparecerá automaticamente na sua lista</li>
+              </ol>
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <p><strong>🔗 Link alternativo:</strong></p>
+              <p style="word-break: break-all; font-size: 12px; color: #6b7280;">
+                ${process.env.NEXT_PUBLIC_BASE_URL || 'https://estock.vercel.app'}/api/invites/accept?token=${inviteToken}&userId=${userId}
+              </p>
+            </div>
+          </div>
+          
+          <div style="background: #f3f4f6; padding: 15px; text-align: center; color: #6b7280; font-size: 12px;">
+            <p>Este convite expira em 7 dias. Se você não solicitou este convite, pode ignorar este email.</p>
+            <p>Sistema de Gestão de Materiais - ${new Date().toLocaleDateString('pt-BR')}</p>
+          </div>
+        </div>
+      `
+
+      const mailOptions = {
+        from: `Sistema de Gestão <${process.env.GMAIL_USER}>`,
+        to: to,
+        subject: subject,
+        html: html
+      }
+
+      const result = await this.transporter.sendMail(mailOptions)
+      console.log('✅ Email de convite enviado com sucesso:', result.messageId)
+      
+      return { 
+        success: true, 
+        messageId: result.messageId 
+      }
+
+    } catch (error) {
+      console.error('❌ Erro ao enviar email de convite:', error)
+      return { success: false }
+    }
+  }
 }
 
 export const emailService = new EmailService()
