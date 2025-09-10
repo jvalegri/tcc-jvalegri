@@ -107,8 +107,19 @@ const eventSystem = EventListenerSystem.getInstance()
 eventSystem.on('low_stock', async (data: any) => {
   console.log('Evento de estoque baixo detectado:', data)
   
-  // Aqui você pode adicionar lógica para enviar notificação
-  // Por exemplo, buscar configurações do usuário e enviar email
+  // Enviar notificação real para gestores do projeto
+  try {
+    await sendNotificationToProjectManagers(data.projectId, {
+      type: 'low_stock',
+      severity: 'high',
+      project: data.projectName || 'Projeto',
+      material: data.materialName,
+      quantity: data.currentStock,
+      details: `Material ${data.materialName} está com estoque baixo (${data.currentStock} unidades)`
+    })
+  } catch (error) {
+    console.error('Erro ao enviar notificação de estoque baixo:', error)
+  }
 })
 
 eventSystem.on('movement', async (data: any) => {
@@ -116,13 +127,71 @@ eventSystem.on('movement', async (data: any) => {
   
   // Detectar se é uma movimentação crítica
   if (eventSystem.detectCriticalEvent(data)) {
-    console.log('Movimentação crítica detectada por IA')
+    console.log('Movimentação crítica detectada')
+    
+    // Enviar notificação para gestores
+    try {
+      await sendNotificationToProjectManagers(data.projectId, {
+        type: 'large_withdrawal',
+        severity: 'critical',
+        project: data.projectName || 'Projeto',
+        material: data.materialName,
+        quantity: data.quantity,
+        user: data.userName,
+        details: `Retirada de ${data.quantity} unidades de ${data.materialName} por ${data.userName}`
+      })
+    } catch (error) {
+      console.error('Erro ao enviar notificação de movimentação crítica:', error)
+    }
   }
 })
 
 eventSystem.on('invite_accepted', async (data: any) => {
   console.log('Convite aceito:', data)
+  
+  // Enviar notificação para gestores
+  try {
+    await sendNotificationToProjectManagers(data.projectId, {
+      type: 'invite_accepted',
+      severity: 'medium',
+      project: data.projectName || 'Projeto',
+      user: data.userName,
+      details: `${data.userName} aceitou o convite para participar do projeto`
+    })
+  } catch (error) {
+    console.error('Erro ao enviar notificação de convite aceito:', error)
+  }
 })
+
+// Função para enviar notificação para gestores do projeto
+async function sendNotificationToProjectManagers(projectId: string, eventData: any) {
+  try {
+    // Buscar gestores do projeto (simulação - você pode implementar busca real)
+    const managers = await getProjectManagers(projectId)
+    
+    for (const manager of managers) {
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: eventData,
+          settings: { criticalOnly: true }, // Configuração padrão
+          recipientEmail: manager.email
+        })
+      })
+    }
+  } catch (error) {
+    console.error('Erro ao enviar notificação para gestores:', error)
+  }
+}
+
+// Função para buscar gestores do projeto (implementar com Prisma)
+async function getProjectManagers(projectId: string) {
+  // Simulação - implementar busca real com Prisma
+  return [
+    { email: 'gestor@exemplo.com' } // Substituir por busca real
+  ]
+}
 
 // Endpoint para emitir eventos (usado por outras APIs)
 export async function POST(request: NextRequest) {

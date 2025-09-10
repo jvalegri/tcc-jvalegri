@@ -159,21 +159,21 @@ function getFallbackTemplate(event: NotificationEvent) {
   }
 }
 
-// Detecção de eventos críticos usando IA
+// Detecção de eventos críticos (sem IA)
 function detectCriticalEvent(event: NotificationEvent): boolean {
-  // Simulação de IA para detectar eventos críticos
+  // Regras simples para detectar eventos críticos
   const criticalPatterns = [
-    // Padrão: múltiplas retiradas em sequência
-    event.type === 'large_withdrawal' && event.quantity && event.quantity > 100,
+    // Estoque baixo
+    event.type === 'low_stock',
     
-    // Padrão: estoque baixo em material crítico
-    event.type === 'low_stock' && event.material?.toLowerCase().includes('cimento'),
+    // Produto esgotado
+    event.type === 'out_of_stock',
     
-    // Padrão: horário fora do expediente
-    new Date().getHours() < 8 || new Date().getHours() > 18,
+    // Retirada em grande escala
+    event.type === 'large_withdrawal' && event.quantity && event.quantity > 50,
     
-    // Padrão: fim de semana
-    new Date().getDay() === 0 || new Date().getDay() === 6
+    // Convite aceito
+    event.type === 'invite_accepted'
   ]
 
   return criticalPatterns.some(pattern => pattern)
@@ -211,8 +211,8 @@ export async function POST(request: NextRequest) {
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
         
         <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
-          <h3 style="margin-top: 0;">🤖 Insights de IA</h3>
-          <p><strong>Contexto:</strong> ${event.details || 'Análise automática do sistema'}</p>
+          <h3 style="margin-top: 0;">📊 Análise do Sistema</h3>
+          <p><strong>Contexto:</strong> ${event.details || 'Evento detectado automaticamente pelo sistema'}</p>
           <p><strong>Recomendação:</strong> ${detectCriticalEvent(event) ? 'Ação imediata recomendada' : 'Monitoramento contínuo'}</p>
         </div>
         
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
       </div>
     `
 
-    // Enviar email
+    // Enviar email real
     const { data, error } = await resend.emails.send({
       from: 'Sistema de Gestão <noreply@estock.vercel.app>',
       to: [recipientEmail],
@@ -233,10 +233,12 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Erro ao enviar email:', error)
       return NextResponse.json(
-        { error: 'Falha ao enviar notificação' },
+        { error: 'Falha ao enviar notificação', details: error },
         { status: 500 }
       )
     }
+
+    console.log('Email enviado com sucesso:', data?.id)
 
     return NextResponse.json({
       message: 'Notificação enviada com sucesso',

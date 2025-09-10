@@ -191,8 +191,8 @@ export function DataManagement() {
           </p>
         </div>
         <Badge variant="outline" className="flex items-center gap-1">
-          <Zap className="h-3 w-3" />
-          IA Ativa
+          <Activity className="h-3 w-3" />
+          Sistema Ativo
         </Badge>
       </div>
 
@@ -215,7 +215,7 @@ export function DataManagement() {
               <Alert>
                 <Bell className="h-4 w-4" />
                 <AlertDescription>
-                  Configure suas preferências de notificação. O sistema usa IA para detectar eventos críticos automaticamente.
+                  Configure suas preferências de notificação. O sistema detecta eventos críticos automaticamente.
                 </AlertDescription>
               </Alert>
 
@@ -301,13 +301,13 @@ export function DataManagement() {
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="ai-detection">Detecção IA</Label>
+                        <Label htmlFor="system-detection">Detecção Automática</Label>
                         <p className="text-sm text-muted-foreground">
-                          Eventos críticos detectados por IA
+                          Eventos críticos detectados pelo sistema
                         </p>
                       </div>
                       <Switch
-                        id="ai-detection"
+                        id="system-detection"
                         checked={settings.aiDetection}
                         onCheckedChange={(checked) => handleSettingChange('aiDetection', checked)}
                       />
@@ -420,12 +420,12 @@ export function DataManagement() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Taxa de Resposta IA
+                  Taxa de Detecção
                 </CardTitle>
-                <Zap className="h-4 w-4 text-muted-foreground" />
+                <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">94%</div>
+                <div className="text-2xl font-bold">98%</div>
                 <p className="text-xs text-muted-foreground">
                   Precisão de detecção
                 </p>
@@ -437,13 +437,13 @@ export function DataManagement() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Database className="h-5 w-5" />
-                Insights de IA
+                Insights do Sistema
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <Alert>
-                  <Zap className="h-4 w-4" />
+                  <Activity className="h-4 w-4" />
                   <AlertDescription>
                     <strong>Padrão Detectado:</strong> Retiradas de Areia aumentaram 40% nas últimas 2 semanas. 
                     Considere aumentar o estoque mínimo para este material.
