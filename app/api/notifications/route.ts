@@ -24,9 +24,15 @@ interface NotificationSettings {
   aiDetection: boolean
 }
 
+// Interface para templates de email
+interface EmailTemplate {
+  subject: string
+  body: string
+}
+
 // Gerador de templates de email usando IA
-function generateEmailTemplate(event: NotificationEvent, settings: NotificationSettings) {
-  const templates = {
+function generateEmailTemplate(event: NotificationEvent, settings: NotificationSettings): EmailTemplate {
+  const templates: Record<string, Record<string, EmailTemplate>> = {
     low_stock: {
       critical: {
         subject: `🚨 ALERTA CRÍTICO: Estoque Baixo - ${event.project}`,
@@ -123,7 +129,7 @@ function generateEmailTemplate(event: NotificationEvent, settings: NotificationS
     }
   }
 
-  const template = templates[event.type]?.[event.severity]
+  const template = (templates as any)[event.type]?.[event.severity]
   if (!template) {
     // Fallback para template padrão baseado no tipo de evento
     const fallbackTemplate = getFallbackTemplate(event)
