@@ -125,13 +125,32 @@ function generateEmailTemplate(event: NotificationEvent, settings: NotificationS
 
   const template = templates[event.type]?.[event.severity]
   if (!template) {
-    return {
-      subject: `Notificação - ${event.project}`,
-      body: `<p>Evento: ${event.type}</p><p>Projeto: ${event.project}</p>`
-    }
+    // Fallback para template padrão baseado no tipo de evento
+    const fallbackTemplate = getFallbackTemplate(event)
+    return fallbackTemplate
   }
 
   return template
+}
+
+// Função para obter template padrão quando não há template específico
+function getFallbackTemplate(event: NotificationEvent) {
+  const baseSubject = `Notificação - ${event.project}`
+  const baseBody = `
+    <h2>Evento Detectado</h2>
+    <p><strong>Projeto:</strong> ${event.project}</p>
+    <p><strong>Tipo:</strong> ${event.type}</p>
+    <p><strong>Severidade:</strong> ${event.severity}</p>
+    ${event.material ? `<p><strong>Material:</strong> ${event.material}</p>` : ''}
+    ${event.user ? `<p><strong>Usuário:</strong> ${event.user}</p>` : ''}
+    ${event.quantity ? `<p><strong>Quantidade:</strong> ${event.quantity}</p>` : ''}
+    ${event.details ? `<p><strong>Detalhes:</strong> ${event.details}</p>` : ''}
+  `
+
+  return {
+    subject: baseSubject,
+    body: baseBody
+  }
 }
 
 // Detecção de eventos críticos usando IA
