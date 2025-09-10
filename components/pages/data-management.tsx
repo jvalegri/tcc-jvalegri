@@ -161,7 +161,7 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
       console.error('Erro no teste de notificação:', error)
       toast({
         title: "Erro no teste",
-        description: `Não foi possível enviar a notificação de teste: ${error.message}`,
+        description: `Não foi possível enviar a notificação de teste: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       })
     }
