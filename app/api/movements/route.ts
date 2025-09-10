@@ -228,6 +228,26 @@ export async function POST(request: NextRequest) {
             }
           })
         })
+
+        // Verificar se estoque ficou baixo após movimentação
+        if (updatedMaterial && updatedMaterial.currentQuantity <= updatedMaterial.minStock) {
+          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              eventType: 'low_stock',
+              data: {
+                type: 'low_stock',
+                materialId: newMovement.materialId,
+                materialName: newMovement.material.name,
+                projectId: newMovement.projectId,
+                projectName: project.name,
+                currentStock: updatedMaterial.currentQuantity,
+                minStock: updatedMaterial.minStock
+              }
+            })
+          })
+        }
       } catch (error) {
         console.warn('Erro ao emitir evento de movimentação:', error)
       }

@@ -187,10 +187,39 @@ async function sendNotificationToProjectManagers(projectId: string, eventData: a
 
 // Função para buscar gestores do projeto (implementar com Prisma)
 async function getProjectManagers(projectId: string) {
-  // Simulação - implementar busca real com Prisma
-  return [
-    { email: 'gestor@exemplo.com' } // Substituir por busca real
-  ]
+  try {
+    // Importar Prisma dinamicamente
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
+
+    // Buscar gestores do projeto
+    const managers = await prisma.projectMember.findMany({
+      where: {
+        projectId,
+        role: 'GESTOR',
+        status: 'ATIVO'
+      },
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true
+          }
+        }
+      }
+    })
+
+    await prisma.$disconnect()
+
+    return managers.map(member => ({
+      email: member.user.email,
+      name: member.user.name
+    }))
+
+  } catch (error) {
+    console.error('Erro ao buscar gestores:', error)
+    return []
+  }
 }
 
 // Endpoint para emitir eventos (usado por outras APIs)

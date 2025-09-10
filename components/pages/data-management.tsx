@@ -47,9 +47,10 @@ interface NotificationEvent {
 
 interface DataManagementProps {
   projectId?: string
+  userEmail?: string
 }
 
-export function DataManagement({ projectId }: DataManagementProps) {
+export function DataManagement({ projectId, userEmail }: DataManagementProps) {
   const { toast } = useToast()
   const [settings, setSettings] = useState<NotificationSettings>({
     criticalOnly: true,
@@ -128,11 +129,23 @@ export function DataManagement({ projectId }: DataManagementProps) {
   }
 
   const testNotification = async () => {
+    if (!userEmail) {
+      toast({
+        title: "Erro",
+        description: "Email do usuário não encontrado. Faça login novamente.",
+        variant: "destructive",
+      })
+      return
+    }
+
     try {
       const response = await fetch('/api/notifications/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings })
+        body: JSON.stringify({ 
+          settings,
+          recipientEmail: userEmail
+        })
       })
       
       if (response.ok) {
@@ -141,12 +154,14 @@ export function DataManagement({ projectId }: DataManagementProps) {
           description: "Verifique seu email para confirmar o recebimento.",
         })
       } else {
-        throw new Error('Falha no envio')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Falha no envio')
       }
     } catch (error) {
+      console.error('Erro no teste de notificação:', error)
       toast({
         title: "Erro no teste",
-        description: "Não foi possível enviar a notificação de teste.",
+        description: `Não foi possível enviar a notificação de teste: ${error.message}`,
         variant: "destructive",
       })
     }
