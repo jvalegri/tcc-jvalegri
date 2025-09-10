@@ -361,4 +361,17 @@ class EmailService {
 }
 
 export const emailService = new EmailService()
+
+// Exportar função diretamente para compatibilidade
+export const sendProjectInviteEmail = async (params: {
+  to: string
+  name: string
+  projectName: string
+  role: string
+  inviteToken: string
+  userId: string
+}): Promise<{ success: boolean; messageId?: string }> => {
+  return await emailService.sendProjectInviteEmail(params)
+}
+
 export type { NotificationEvent }
