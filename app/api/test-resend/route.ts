@@ -21,13 +21,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'RESEND_API_KEY não configurada' }, { status: 500 })
     }
 
-    // Teste simples
-    const { data, error } = await resend.emails.send({
-      from: 'Teste <noreply@estock.vercel.app>',
-      to: [email],
-      subject: 'Teste Simples',
-      html: '<p>Este é um teste simples do Resend.</p>',
-    })
+    // Teste simples - tentar diferentes domínios
+    let emailResult = null
+    let emailError = null
+    
+    // Tentar primeiro com domínio verificado
+    try {
+      emailResult = await resend.emails.send({
+        from: 'Teste <onboarding@resend.dev>',
+        to: [email],
+        subject: 'Teste Simples - Resend',
+        html: '<p>Este é um teste simples do Resend usando domínio padrão.</p>',
+      })
+    } catch (err) {
+      console.log('❌ Falha com domínio padrão, tentando domínio customizado...')
+      emailError = err
+      
+      // Tentar com domínio customizado
+      try {
+        emailResult = await resend.emails.send({
+          from: 'Teste <noreply@estock.vercel.app>',
+          to: [email],
+          subject: 'Teste Simples - Custom Domain',
+          html: '<p>Este é um teste simples do Resend usando domínio customizado.</p>',
+        })
+      } catch (err2) {
+        emailError = err2
+      }
+    }
+    
+    const { data, error } = emailResult || { data: null, error: emailError }
 
     if (error) {
       console.error('❌ Erro do Resend:', error)

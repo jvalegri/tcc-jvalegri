@@ -141,7 +141,8 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
     try {
       console.log('🧪 Testando envio de email para:', userEmail)
       
-      const response = await fetch('/api/test-resend', {
+      // Tentar nova API primeiro
+      let response = await fetch('/api/test-resend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -149,13 +150,26 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
         })
       })
       
+      // Se falhar, tentar API antiga
+      if (!response.ok) {
+        console.log('🔄 Tentando API antiga...')
+        response = await fetch('/api/notifications/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            settings,
+            recipientEmail: userEmail
+          })
+        })
+      }
+      
       const result = await response.json()
       console.log('📧 Resultado do teste:', result)
       
       if (response.ok) {
         toast({
           title: "Email de teste enviado",
-          description: `Email enviado com sucesso! ID: ${result.emailId}`,
+          description: `Email enviado com sucesso! ID: ${result.emailId || 'N/A'}`,
         })
       } else {
         console.error('❌ Erro detalhado:', result)
