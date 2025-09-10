@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { emailService, NotificationEvent } from '@/lib/email-service'
 
 // Sistema de Event Listeners para capturar eventos em tempo real
 class EventListenerSystem {
@@ -166,19 +167,37 @@ eventSystem.on('invite_accepted', async (data: any) => {
 // Função para enviar notificação para gestores do projeto
 async function sendNotificationToProjectManagers(projectId: string, eventData: any) {
   try {
-    // Buscar gestores do projeto (simulação - você pode implementar busca real)
+    // Buscar gestores do projeto
     const managers = await getProjectManagers(projectId)
     
+    console.log(`📧 Enviando notificação para ${managers.length} gestores do projeto ${projectId}`)
+    
     for (const manager of managers) {
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event: eventData,
-          settings: { criticalOnly: true }, // Configuração padrão
-          recipientEmail: manager.email
-        })
-      })
+      try {
+        // Converter eventData para NotificationEvent
+        const notificationEvent: NotificationEvent = {
+          type: eventData.type || 'movement',
+          severity: eventData.severity || 'medium',
+          project: eventData.project || 'Projeto Atual',
+          material: eventData.materialName || eventData.material,
+          quantity: eventData.quantity,
+          minStock: eventData.minStock,
+          userName: eventData.userName || eventData.user,
+          justification: eventData.justification,
+          details: eventData.details
+        }
+
+        // Enviar notificação diretamente via Gmail SMTP
+        const success = await emailService.sendNotification(notificationEvent, manager.email)
+        
+        if (success) {
+          console.log(`✅ Notificação enviada para ${manager.email}`)
+        } else {
+          console.error(`❌ Falha ao enviar notificação para ${manager.email}`)
+        }
+      } catch (error) {
+        console.error(`❌ Erro ao enviar notificação para ${manager.email}:`, error)
+      }
     }
   } catch (error) {
     console.error('Erro ao enviar notificação para gestores:', error)

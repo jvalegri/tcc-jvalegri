@@ -1,82 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { emailService } from '@/lib/email-service'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { email } = body
 
-    console.log('🔍 Testando configuração Resend...')
+    console.log('🔍 Testando envio de email via Gmail SMTP...')
     console.log('📧 Email:', email)
-    console.log('🔑 API Key presente:', !!process.env.RESEND_API_KEY)
-    console.log('🔑 API Key (primeiros 10 chars):', process.env.RESEND_API_KEY?.substring(0, 10))
+    console.log('🔑 Gmail User:', process.env.GMAIL_USER)
+    console.log('🔑 Gmail App Password presente:', !!process.env.GMAIL_APP_PASSWORD)
 
     if (!email) {
       return NextResponse.json({ error: 'Email é obrigatório' }, { status: 400 })
     }
 
-    if (!process.env.RESEND_API_KEY) {
-      return NextResponse.json({ error: 'RESEND_API_KEY não configurada' }, { status: 500 })
-    }
-
-    // Teste simples - tentar diferentes domínios
-    let emailResult = null
-    let emailError = null
-    
-    // Tentar primeiro com domínio verificado
-    try {
-      emailResult = await resend.emails.send({
-        from: 'Teste <onboarding@resend.dev>',
-        to: [email],
-        subject: 'Teste Simples - Resend',
-        html: '<p>Este é um teste simples do Resend usando domínio padrão.</p>',
-      })
-    } catch (err) {
-      console.log('❌ Falha com domínio padrão, tentando domínio customizado...')
-      emailError = err
-      
-      // Tentar com domínio customizado
-      try {
-        emailResult = await resend.emails.send({
-          from: 'Teste <noreply@estock.vercel.app>',
-          to: [email],
-          subject: 'Teste Simples - Custom Domain',
-          html: '<p>Este é um teste simples do Resend usando domínio customizado.</p>',
-        })
-      } catch (err2) {
-        emailError = err2
-      }
-    }
-    
-    const { data, error } = emailResult || { data: null, error: emailError }
-
-    if (error) {
-      console.error('❌ Erro do Resend:', error)
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
       return NextResponse.json({ 
-        error: 'Erro do Resend', 
-        details: error,
-        config: {
-          hasApiKey: !!process.env.RESEND_API_KEY,
-          apiKeyPrefix: process.env.RESEND_API_KEY?.substring(0, 10),
-          from: 'noreply@estock.vercel.app'
+        error: 'Configuração Gmail incompleta',
+        details: {
+          hasUser: !!process.env.GMAIL_USER,
+          hasPassword: !!process.env.GMAIL_APP_PASSWORD
         }
       }, { status: 500 })
     }
 
-    console.log('✅ Email enviado com sucesso:', data?.id)
+    // Enviar email de teste
+    const success = await emailService.sendTestEmail(email)
 
-    return NextResponse.json({
-      success: true,
-      message: 'Email enviado com sucesso',
-      emailId: data?.id,
-      config: {
-        hasApiKey: !!process.env.RESEND_API_KEY,
-        apiKeyPrefix: process.env.RESEND_API_KEY?.substring(0, 10),
-        from: 'noreply@estock.vercel.app'
-      }
-    })
+    if (success) {
+      console.log('✅ Email de teste enviado com sucesso via Gmail SMTP')
+      return NextResponse.json({
+        success: true,
+        message: 'Email de teste enviado com sucesso via Gmail SMTP',
+        config: {
+          hasUser: !!process.env.GMAIL_USER,
+          hasPassword: !!process.env.GMAIL_APP_PASSWORD,
+          service: 'Gmail SMTP'
+        }
+      })
+    } else {
+      return NextResponse.json({
+        error: 'Falha ao enviar email via Gmail SMTP',
+        config: {
+          hasUser: !!process.env.GMAIL_USER,
+          hasPassword: !!process.env.GMAIL_APP_PASSWORD,
+          service: 'Gmail SMTP'
+        }
+      }, { status: 500 })
+    }
 
   } catch (error) {
     console.error('❌ Erro geral:', error)
@@ -84,8 +56,9 @@ export async function POST(request: NextRequest) {
       error: 'Erro interno',
       details: error instanceof Error ? error.message : 'Erro desconhecido',
       config: {
-        hasApiKey: !!process.env.RESEND_API_KEY,
-        apiKeyPrefix: process.env.RESEND_API_KEY?.substring(0, 10)
+        hasUser: !!process.env.GMAIL_USER,
+        hasPassword: !!process.env.GMAIL_APP_PASSWORD,
+        service: 'Gmail SMTP'
       }
     }, { status: 500 })
   }
