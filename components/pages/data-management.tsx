@@ -139,29 +139,37 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
     }
 
     try {
-      const response = await fetch('/api/notifications/test', {
+      console.log('🧪 Testando envio de email para:', userEmail)
+      
+      const response = await fetch('/api/test-resend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          settings,
-          recipientEmail: userEmail
+          email: userEmail
         })
       })
       
+      const result = await response.json()
+      console.log('📧 Resultado do teste:', result)
+      
       if (response.ok) {
         toast({
-          title: "Notificação de teste enviada",
-          description: "Verifique seu email para confirmar o recebimento.",
+          title: "Email de teste enviado",
+          description: `Email enviado com sucesso! ID: ${result.emailId}`,
         })
       } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Falha no envio')
+        console.error('❌ Erro detalhado:', result)
+        toast({
+          title: "Erro no teste",
+          description: `${result.error}: ${result.details || 'Verifique os logs do console'}`,
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      console.error('Erro no teste de notificação:', error)
+      console.error('❌ Erro no teste de notificação:', error)
       toast({
         title: "Erro no teste",
-        description: `Não foi possível enviar a notificação de teste: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        description: `Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       })
     }
