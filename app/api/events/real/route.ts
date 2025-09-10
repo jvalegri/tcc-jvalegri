@@ -66,32 +66,33 @@ async function getRealEvents(projectId: string, limit: number) {
       events.push(event)
     }
 
-    // Buscar materiais com estoque baixo
-    const lowStockMaterials = await prisma.material.findMany({
-      where: {
-        projectId,
-        currentQuantity: { lte: prisma.material.fields.minStock }
-      },
+    // Buscar materiais com estoque baixo do projeto
+    const projectMaterials = await prisma.projectMaterial.findMany({
+      where: { projectId },
       include: {
+        material: true,
         project: { select: { name: true } }
       }
     })
 
-    // Converter materiais com estoque baixo em eventos
-    for (const material of lowStockMaterials) {
-      const event = {
-        id: `low-stock-${material.id}`,
-        type: 'low_stock',
-        severity: 'high',
-        title: 'Estoque Baixo Detectado',
-        description: `Material ${material.name} está com estoque baixo (${material.currentQuantity}/${material.minStock})`,
-        timestamp: new Date(), // Usar data atual para eventos de estoque baixo
-        project: material.project?.name || 'Projeto Atual',
-        material: material.name,
-        quantity: material.currentQuantity,
-        minStock: material.minStock
+    // Filtrar materiais com estoque baixo
+    for (const projectMaterial of projectMaterials) {
+      const material = projectMaterial.material
+      if (material && material.currentQuantity <= material.minStock) {
+        const event = {
+          id: `low-stock-${material.id}`,
+          type: 'low_stock',
+          severity: 'high',
+          title: 'Estoque Baixo Detectado',
+          description: `Material ${material.name} está com estoque baixo (${material.currentQuantity}/${material.minStock})`,
+          timestamp: new Date(),
+          project: projectMaterial.project?.name || 'Projeto Atual',
+          material: material.name,
+          quantity: material.currentQuantity,
+          minStock: material.minStock
+        }
+        events.push(event)
       }
-      events.push(event)
     }
 
     await prisma.$disconnect()
