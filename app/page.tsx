@@ -375,7 +375,7 @@ export default function App() {
         )
       case "data-management":
         return user && selectedProject ? (
-          <DataManagement />
+          <DataManagement projectId={selectedProject.id} />
         ) : (
           <div className="text-center mt-12">
             <p className="text-red-600">Usuário não autenticado ou projeto não selecionado</p>

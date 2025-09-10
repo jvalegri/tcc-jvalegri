@@ -45,7 +45,11 @@ interface NotificationEvent {
   severity: 'low' | 'medium' | 'high' | 'critical'
 }
 
-export function DataManagement() {
+interface DataManagementProps {
+  projectId?: string
+}
+
+export function DataManagement({ projectId }: DataManagementProps) {
   const { toast } = useToast()
   const [settings, setSettings] = useState<NotificationSettings>({
     criticalOnly: true,
@@ -60,42 +64,32 @@ export function DataManagement() {
   const [recentEvents, setRecentEvents] = useState<NotificationEvent[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // Simular eventos recentes
+  // Buscar eventos reais do sistema
   useEffect(() => {
-    const mockEvents: NotificationEvent[] = [
-      {
-        id: '1',
-        type: 'critical',
-        title: 'Estoque Baixo Detectado',
-        description: 'Material "Tijolo" está abaixo do estoque mínimo (5/10 unidades)',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 min atrás
-        project: 'Projeto Alpha',
-        material: 'Tijolo',
-        severity: 'high'
-      },
-      {
-        id: '2',
-        type: 'general',
-        title: 'Movimentação Registrada',
-        description: 'João Silva registrou entrada de 50 unidades de Cimento',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1h atrás
-        project: 'Projeto Alpha',
-        user: 'João Silva',
-        material: 'Cimento',
-        severity: 'low'
-      },
-      {
-        id: '3',
-        type: 'critical',
-        title: 'Retirada em Grande Escala',
-        description: 'Retirada de 85% do estoque total de Areia detectada',
-        timestamp: new Date(Date.now() - 1000 * 60 * 90), // 1.5h atrás
-        project: 'Projeto Alpha',
-        material: 'Areia',
-        severity: 'critical'
+    const fetchRealEvents = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch(`/api/events/real?projectId=${projectId || 'current'}&limit=10`)
+        if (response.ok) {
+          const events = await response.json()
+          setRecentEvents(events)
+        } else {
+          console.error('Erro ao buscar eventos:', response.statusText)
+          setRecentEvents([])
+        }
+      } catch (error) {
+        console.error('Erro ao buscar eventos:', error)
+        setRecentEvents([])
+      } finally {
+        setIsLoading(false)
       }
-    ]
-    setRecentEvents(mockEvents)
+    }
+
+    fetchRealEvents()
+    
+    // Atualizar eventos a cada 30 segundos
+    const interval = setInterval(fetchRealEvents, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const handleSettingChange = (key: keyof NotificationSettings, value: boolean) => {
@@ -167,6 +161,11 @@ export function DataManagement() {
       default: return 'secondary'
     }
   }
+
+  // Calcular métricas reais
+  const criticalEvents = recentEvents.filter(e => e.severity === 'critical' || e.severity === 'high').length
+  const totalEvents = recentEvents.length
+  const detectionRate = totalEvents > 0 ? Math.round((criticalEvents / totalEvents) * 100) : 0
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
@@ -355,8 +354,14 @@ export function DataManagement() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {recentEvents.map((event) => (
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="text-muted-foreground mt-2">Carregando eventos...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentEvents.map((event) => (
                   <div key={event.id} className="flex items-start gap-3 p-3 border rounded-lg">
                     <div className="flex-shrink-0 mt-0.5">
                       {getSeverityIcon(event.severity)}
@@ -379,8 +384,9 @@ export function DataManagement() {
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -395,9 +401,9 @@ export function DataManagement() {
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">3</div>
+                <div className="text-2xl font-bold">{criticalEvents}</div>
                 <p className="text-xs text-muted-foreground">
-                  +1 desde ontem
+                  Últimas 24h
                 </p>
               </CardContent>
             </Card>
@@ -410,9 +416,9 @@ export function DataManagement() {
                 <Mail className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">12</div>
+                <div className="text-2xl font-bold">{totalEvents}</div>
                 <p className="text-xs text-muted-foreground">
-                  Esta semana
+                  Total de eventos
                 </p>
               </CardContent>
             </Card>
@@ -425,9 +431,9 @@ export function DataManagement() {
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">98%</div>
+                <div className="text-2xl font-bold">{detectionRate}%</div>
                 <p className="text-xs text-muted-foreground">
-                  Precisão de detecção
+                  Taxa de detecção
                 </p>
               </CardContent>
             </Card>
@@ -442,21 +448,33 @@ export function DataManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Alert>
-                  <Activity className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Padrão Detectado:</strong> Retiradas de Areia aumentaram 40% nas últimas 2 semanas. 
-                    Considere aumentar o estoque mínimo para este material.
-                  </AlertDescription>
-                </Alert>
+                {criticalEvents > 0 ? (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Alerta:</strong> {criticalEvents} evento(s) crítico(s) detectado(s). 
+                      Verifique os materiais com estoque baixo e movimentações grandes.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert>
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Status:</strong> Sistema funcionando normalmente. 
+                      Nenhum evento crítico detectado.
+                    </AlertDescription>
+                  </Alert>
+                )}
                 
-                <Alert>
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Recomendação:</strong> Sistema funcionando dentro dos parâmetros normais. 
-                    Nenhuma ação imediata necessária.
-                  </AlertDescription>
-                </Alert>
+                {totalEvents > 0 && (
+                  <Alert>
+                    <Activity className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Atividade:</strong> {totalEvents} evento(s) registrado(s) recentemente. 
+                      Sistema monitorando continuamente.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
             </CardContent>
           </Card>
