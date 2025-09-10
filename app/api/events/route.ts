@@ -104,14 +104,14 @@ class EventListenerSystem {
 const eventSystem = EventListenerSystem.getInstance()
 
 // Configurar listeners para eventos do sistema
-eventSystem.on('low_stock', async (data) => {
+eventSystem.on('low_stock', async (data: any) => {
   console.log('Evento de estoque baixo detectado:', data)
   
   // Aqui você pode adicionar lógica para enviar notificação
   // Por exemplo, buscar configurações do usuário e enviar email
 })
 
-eventSystem.on('movement', async (data) => {
+eventSystem.on('movement', async (data: any) => {
   console.log('Movimentação detectada:', data)
   
   // Detectar se é uma movimentação crítica
@@ -120,7 +120,7 @@ eventSystem.on('movement', async (data) => {
   }
 })
 
-eventSystem.on('invite_accepted', async (data) => {
+eventSystem.on('invite_accepted', async (data: any) => {
   console.log('Convite aceito:', data)
 })
 
