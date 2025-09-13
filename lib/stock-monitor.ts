@@ -20,7 +20,7 @@ async function getProjectManagers(projectId: string) {
         where: {
           projectId: projectId,
           role: 'GESTOR',
-          status: 'ACTIVE'
+          status: 'ATIVO'
         },
         include: {
           user: {
