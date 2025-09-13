@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   CheckCircle, 
   Info, 
+  Mail,
   Database,
   Activity,
   Shield
