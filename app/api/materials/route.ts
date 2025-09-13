@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { checkAndEmitLowStockEvent, checkMaterialStatusChange } from "@/lib/stock-monitor"
 
 // Configuração para evitar build estático
 export const dynamic = 'force-dynamic'
@@ -113,6 +114,15 @@ export async function POST(request: NextRequest) {
         }
       })
 
+      // Verificar se o material foi criado com estoque baixo
+      await checkAndEmitLowStockEvent(
+        newMaterial.id,
+        newMaterial.currentQuantity,
+        newMaterial.minStock,
+        'material_created',
+        projectId
+      )
+
       // Retornar material criado no formato esperado pelo frontend
       const materialResponse = {
         id: newMaterial.id,
@@ -190,6 +200,15 @@ export async function PUT(request: NextRequest) {
           minStock: parseFloat(minStock || 5)
         }
       })
+
+      // Verificar se o material mudou para status de estoque baixo
+      await checkMaterialStatusChange(
+        id,
+        existingMaterial.currentQuantity,
+        existingMaterial.minStock,
+        updatedMaterial.currentQuantity,
+        updatedMaterial.minStock
+      )
 
       // Retornar material atualizado no formato esperado pelo frontend
       const materialResponse = {
