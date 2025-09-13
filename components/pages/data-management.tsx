@@ -139,7 +139,8 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
         body: JSON.stringify({ 
           eventType,
           projectId: projectId || 'current',
-          materialId: 'test-material'
+          materialId: 'test-material',
+          userEmail: userEmail // Passar email do usuário
         })
       })
       
@@ -148,8 +149,8 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
       
       if (response.ok) {
         toast({
-          title: "Evento de teste emitido",
-          description: `${eventType} emitido com sucesso! Verifique os logs do servidor.`,
+          title: "Evento de teste processado",
+          description: `${eventType} processado com sucesso! Verifique seu email.`,
         })
         
         // Recarregar eventos após 2 segundos

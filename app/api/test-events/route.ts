@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { emailService, NotificationEvent } from '@/lib/email-service'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { eventType, projectId, materialId } = body
+    const { eventType, projectId, materialId, userEmail } = body
 
-    console.log('🧪 Testando evento:', eventType, 'para projeto:', projectId)
+    console.log('🧪 Testando evento:', eventType, 'para projeto:', projectId, 'email:', userEmail)
+
+    if (!userEmail) {
+      return NextResponse.json({
+        error: 'Email do usuário é obrigatório para teste'
+      }, { status: 400 })
+    }
 
     // Simular evento de estoque baixo
     if (eventType === 'low_stock') {
@@ -19,25 +26,31 @@ export async function POST(request: NextRequest) {
         minStock: 5
       }
 
-      // Emitir evento
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'low_stock',
-          data: testData
-        })
-      })
+      console.log('📧 Dados do evento de estoque baixo:', testData)
 
-      if (response.ok) {
-        console.log('✅ Evento de estoque baixo emitido com sucesso')
+      // Criar evento de notificação
+      const notificationEvent: NotificationEvent = {
+        type: 'low_stock',
+        severity: 'high',
+        project: testData.projectName,
+        material: testData.materialName,
+        quantity: testData.currentStock,
+        minStock: testData.minStock,
+        details: `Material ${testData.materialName} está com estoque baixo (${testData.currentStock} unidades)`
+      }
+
+      // Enviar notificação de teste diretamente
+      const success = await emailService.sendNotification(notificationEvent, userEmail)
+      
+      if (success) {
+        console.log('✅ Notificação de estoque baixo enviada com sucesso para:', userEmail)
         return NextResponse.json({
           success: true,
-          message: 'Evento de estoque baixo emitido',
+          message: 'Evento de estoque baixo processado e notificação enviada',
           data: testData
         })
       } else {
-        throw new Error('Falha ao emitir evento')
+        throw new Error('Falha ao enviar notificação de estoque baixo')
       }
     }
 
@@ -59,25 +72,32 @@ export async function POST(request: NextRequest) {
         minStock: 10
       }
 
-      // Emitir evento
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'movement',
-          data: testData
-        })
-      })
+      console.log('📧 Dados do evento de movimentação:', testData)
 
-      if (response.ok) {
-        console.log('✅ Evento de movimentação emitido com sucesso')
+      // Criar evento de notificação
+      const notificationEvent: NotificationEvent = {
+        type: 'movement',
+        severity: 'medium',
+        project: 'Projeto de Teste',
+        material: testData.materialName,
+        quantity: testData.quantity,
+        userName: testData.userName,
+        justification: testData.justification,
+        details: `Movimentação de ${testData.quantity} unidades de ${testData.materialName} por ${testData.userName}`
+      }
+
+      // Enviar notificação de teste diretamente
+      const success = await emailService.sendNotification(notificationEvent, userEmail)
+      
+      if (success) {
+        console.log('✅ Notificação de movimentação enviada com sucesso para:', userEmail)
         return NextResponse.json({
           success: true,
-          message: 'Evento de movimentação emitido',
+          message: 'Evento de movimentação processado e notificação enviada',
           data: testData
         })
       } else {
-        throw new Error('Falha ao emitir evento')
+        throw new Error('Falha ao enviar notificação de movimentação')
       }
     }
 
