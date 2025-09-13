@@ -165,7 +165,7 @@ eventSystem.on('invite_accepted', async (data: any) => {
 })
 
 // Função para enviar notificação para gestores do projeto
-export async function sendNotificationToProjectManagers(projectId: string, eventData: any) {
+async function sendNotificationToProjectManagers(projectId: string, eventData: any) {
   try {
     console.log('🔍 Debug: Iniciando envio de notificação para gestores')
     console.log('📧 Projeto ID:', projectId)
