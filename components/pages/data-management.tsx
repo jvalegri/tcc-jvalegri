@@ -19,7 +19,8 @@ import {
   Database,
   Activity,
   Shield,
-  Zap
+  Zap,
+  Package
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -125,6 +126,51 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const testEvent = async (eventType: string) => {
+    try {
+      console.log(`🧪 Testando evento: ${eventType}`)
+      
+      const response = await fetch('/api/test-events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          eventType,
+          projectId: projectId || 'current',
+          materialId: 'test-material'
+        })
+      })
+      
+      const result = await response.json()
+      console.log('📧 Resultado do teste de evento:', result)
+      
+      if (response.ok) {
+        toast({
+          title: "Evento de teste emitido",
+          description: `${eventType} emitido com sucesso! Verifique os logs do servidor.`,
+        })
+        
+        // Recarregar eventos após 2 segundos
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
+      } else {
+        console.error('❌ Erro no teste de evento:', result)
+        toast({
+          title: "Erro no teste de evento",
+          description: `${result.error}: ${result.details || 'Verifique os logs do console'}`,
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('❌ Erro no teste de evento:', error)
+      toast({
+        title: "Erro no teste de evento",
+        description: `Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        variant: "destructive",
+      })
     }
   }
 
@@ -389,6 +435,26 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
                 <Activity className="h-5 w-5" />
                 Eventos Recentes
               </CardTitle>
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => testEvent('low_stock')}
+                  disabled={isLoading}
+                >
+                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  Testar Estoque Baixo
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => testEvent('movement')}
+                  disabled={isLoading}
+                >
+                  <Package className="mr-2 h-4 w-4" />
+                  Testar Movimentação
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
