@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
   Bell, 
   Settings, 
+  AlertTriangle,
   CheckCircle, 
   Info, 
   Database,
