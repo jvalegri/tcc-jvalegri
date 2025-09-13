@@ -66,20 +66,31 @@ export async function checkAndEmitLowStockEvent(
             reason: reason
           }
 
-          // Emitir evento de estoque baixo
-          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              eventType: 'low_stock',
-              data: {
-                type: 'low_stock',
-                ...eventData
-              }
-            })
-          })
+          // Emitir evento de estoque baixo diretamente
+          console.log('📧 Emitindo evento de estoque baixo:', eventData)
           
-          console.log('✅ Evento de estoque baixo emitido:', eventData.materialName)
+          try {
+            // Importar e chamar diretamente o sistema de eventos
+            const { sendNotificationToProjectManagers } = await import('@/api/events/route')
+            
+            // Criar dados do evento no formato esperado
+            const eventDataForNotification = {
+              type: 'low_stock',
+              severity: 'high',
+              project: eventData.projectName,
+              material: eventData.materialName,
+              quantity: eventData.currentStock,
+              minStock: eventData.minStock,
+              details: `Material ${eventData.materialName} está com estoque baixo (${eventData.currentStock} unidades). Estoque mínimo: ${eventData.minStock} unidades.`
+            }
+            
+            // Chamar função de notificação diretamente
+            await sendNotificationToProjectManagers(eventData.projectId, eventDataForNotification)
+            
+            console.log('✅ Evento de estoque baixo emitido com sucesso:', eventData.materialName)
+          } catch (error) {
+            console.error('❌ Erro ao emitir evento de estoque baixo:', error)
+          }
         }
       } finally {
         await prisma.$disconnect()

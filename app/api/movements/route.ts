@@ -204,52 +204,32 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Emitir evento para o sistema de notificações
+      // Verificar se estoque ficou baixo após movimentação e emitir evento
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventType: 'movement',
-            data: {
-              type: 'movement',
-              materialId: newMovement.materialId,
-              materialName: newMovement.material.name,
-              materialType: newMovement.material.type,
-              quantity: newMovement.quantity,
-              movementType: newMovement.type,
-              userId: newMovement.userId,
-              userName: newMovement.user.name,
-              projectId: newMovement.projectId,
-              justification: justification,
-              timestamp: newMovement.timestamp,
-              currentStock: updatedMaterial?.currentQuantity || 0,
-              minStock: updatedMaterial?.minStock || 0
-            }
-          })
-        })
-
-        // Verificar se estoque ficou baixo após movimentação
+        console.log('🔍 Verificando estoque após movimentação...')
+        console.log('📦 Material:', newMovement.material.name)
+        console.log('📊 Estoque atual:', updatedMaterial?.currentQuantity)
+        console.log('📊 Estoque mínimo:', updatedMaterial?.minStock)
+        
         if (updatedMaterial && updatedMaterial.currentQuantity <= updatedMaterial.minStock) {
-          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              eventType: 'low_stock',
-              data: {
-                type: 'low_stock',
-                materialId: newMovement.materialId,
-                materialName: newMovement.material.name,
-                projectId: newMovement.projectId,
-                projectName: project.name,
-                currentStock: updatedMaterial.currentQuantity,
-                minStock: updatedMaterial.minStock
-              }
-            })
-          })
+          console.log('⚠️ Estoque baixo detectado! Emitindo evento...')
+          
+          // Importar e usar o sistema de monitoramento de estoque
+          const { checkAndEmitLowStockEvent } = await import('@/lib/stock-monitor')
+          
+          await checkAndEmitLowStockEvent(
+            newMovement.materialId,
+            newMovement.projectId,
+            updatedMaterial.currentQuantity,
+            updatedMaterial.minStock
+          )
+          
+          console.log('✅ Evento de estoque baixo emitido com sucesso!')
+        } else {
+          console.log('✅ Estoque dentro do limite normal')
         }
       } catch (error) {
-        console.warn('Erro ao emitir evento de movimentação:', error)
+        console.error('❌ Erro ao verificar estoque baixo:', error)
       }
 
       // Retornar movimentação criada no formato esperado pelo frontend
