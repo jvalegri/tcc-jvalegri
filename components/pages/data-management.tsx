@@ -129,6 +129,45 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
     }
   }
 
+  const debugNotification = async () => {
+    try {
+      console.log('🔍 Debug: Testando envio direto de notificação')
+      
+      const response = await fetch('/api/debug-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userEmail: userEmail,
+          projectId: projectId || 'current'
+        })
+      })
+      
+      const result = await response.json()
+      console.log('📧 Resultado do debug:', result)
+      
+      if (response.ok) {
+        toast({
+          title: "Debug de notificação concluído",
+          description: "Notificação enviada diretamente! Verifique seu email.",
+        })
+      } else {
+        console.error('❌ Erro no debug:', result)
+        toast({
+          title: "Erro no debug",
+          description: `${result.error}: ${result.details || 'Verifique os logs do console'}`,
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('❌ Erro no debug:', error)
+      toast({
+        title: "Erro no debug",
+        description: `Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        variant: "destructive",
+      })
+    }
+  }
+
   const testEvent = async (eventType: string) => {
     try {
       console.log(`🧪 Testando evento: ${eventType}`)
@@ -454,6 +493,15 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
                 >
                   <Package className="mr-2 h-4 w-4" />
                   Testar Movimentação
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={debugNotification}
+                  disabled={isLoading}
+                >
+                  <Zap className="mr-2 h-4 w-4" />
+                  Debug Notificação
                 </Button>
               </div>
             </CardHeader>

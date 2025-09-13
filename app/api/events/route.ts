@@ -167,13 +167,25 @@ eventSystem.on('invite_accepted', async (data: any) => {
 // Função para enviar notificação para gestores do projeto
 async function sendNotificationToProjectManagers(projectId: string, eventData: any) {
   try {
+    console.log('🔍 Debug: Iniciando envio de notificação para gestores')
+    console.log('📧 Projeto ID:', projectId)
+    console.log('📧 Evento:', eventData)
+    
     // Buscar gestores do projeto
     const managers = await getProjectManagers(projectId)
     
-    console.log(`📧 Enviando notificação para ${managers.length} gestores do projeto ${projectId}`)
+    console.log(`📧 Encontrados ${managers.length} gestores para o projeto ${projectId}`)
+    console.log('📧 Gestores:', managers.map(m => m.email))
+    
+    if (managers.length === 0) {
+      console.warn('⚠️ Nenhum gestor encontrado para o projeto:', projectId)
+      return
+    }
     
     for (const manager of managers) {
       try {
+        console.log(`📧 Enviando notificação para: ${manager.email}`)
+        
         // Converter eventData para NotificationEvent
         const notificationEvent: NotificationEvent = {
           type: eventData.type || 'movement',
@@ -187,11 +199,13 @@ async function sendNotificationToProjectManagers(projectId: string, eventData: a
           details: eventData.details
         }
 
+        console.log('📧 Evento de notificação:', notificationEvent)
+
         // Enviar notificação diretamente via Gmail SMTP
         const success = await emailService.sendNotification(notificationEvent, manager.email)
         
         if (success) {
-          console.log(`✅ Notificação enviada para ${manager.email}`)
+          console.log(`✅ Notificação enviada com sucesso para ${manager.email}`)
         } else {
           console.error(`❌ Falha ao enviar notificação para ${manager.email}`)
         }
@@ -200,7 +214,7 @@ async function sendNotificationToProjectManagers(projectId: string, eventData: a
       }
     }
   } catch (error) {
-    console.error('Erro ao enviar notificação para gestores:', error)
+    console.error('❌ Erro geral ao enviar notificação para gestores:', error)
   }
 }
 
