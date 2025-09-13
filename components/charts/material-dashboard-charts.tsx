@@ -152,6 +152,54 @@ export function MaterialDashboardCharts({ materials, movements }: MaterialDashbo
     return periodMovements.length
   })
 
+  // Dados para gráfico de valor total do estoque baseado no período selecionado
+  const periodStockValues = periods.map(period => {
+    // Filtrar movimentações até o período atual
+    const movementsUpToPeriod = safeMovements.filter(movement => {
+      if (!movement.timestamp) return false
+      try {
+        const movementDate = new Date(movement.timestamp)
+        
+        if (selectedPeriod === '7d') {
+          const movementDateStr = movementDate.toISOString().slice(0, 10)
+          return movementDateStr <= period
+        } else if (selectedPeriod === '1m') {
+          const periodDate = new Date(period)
+          return movementDate <= periodDate
+        } else {
+          const movementMonth = movementDate.toISOString().slice(0, 7)
+          return movementMonth <= period
+        }
+      } catch (error) {
+        console.warn('Data inválida encontrada:', movement.timestamp)
+        return false
+      }
+    })
+
+    // Calcular valor total do estoque considerando movimentações até o período
+    const stockValue = safeMaterials.reduce((totalValue, material) => {
+      // Calcular quantidade atual considerando movimentações até o período
+      let currentQuantity = material.quantity || 0
+      
+      // Aplicar movimentações até o período
+      movementsUpToPeriod.forEach(movement => {
+        if (movement.materialId === material.id) {
+          if (movement.actionType === 'entrada') {
+            currentQuantity += movement.quantity
+          } else if (movement.actionType === 'saída') {
+            currentQuantity -= movement.quantity
+          }
+        }
+      })
+      
+      // Calcular valor (quantidade * preço)
+      const materialValue = currentQuantity * (material.price || 0)
+      return totalValue + materialValue
+    }, 0)
+
+    return stockValue
+  })
+
   // Dados para gráfico de status de estoque
   const stockStatusData = {
     'Em Estoque': safeMaterials.filter(m => (m.quantity || 0) > (m.minStock || 0)).length,
@@ -216,6 +264,20 @@ export function MaterialDashboardCharts({ materials, movements }: MaterialDashbo
         data: periodMovements,
         borderColor: 'rgba(59, 130, 246, 1)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  }
+
+  const stockValueChartData = {
+    labels: labels,
+    datasets: [
+      {
+        label: 'Valor do Estoque (R$)',
+        data: periodStockValues,
+        borderColor: 'rgba(16, 185, 129, 1)',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
         tension: 0.4,
         fill: true,
       },
@@ -332,34 +394,78 @@ export function MaterialDashboardCharts({ materials, movements }: MaterialDashbo
         </Card>
       </div>
 
-      {/* Movimentações por Período */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      {/* Gráficos de Análise Temporal */}
+      <div className="space-y-6">
+        {/* Movimentações por Período */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                Movimentações - {
+                  selectedPeriod === '7d' ? 'Últimos 7 Dias' :
+                  selectedPeriod === '1m' ? 'Último Mês' :
+                  'Últimos 3 Meses'
+                }
+              </CardTitle>
+              <select 
+                value={selectedPeriod} 
+                onChange={(e) => setSelectedPeriod(e.target.value as PeriodOption)}
+                className="px-3 py-1 text-sm border rounded-md bg-background"
+              >
+                <option value="7d">7 Dias</option>
+                <option value="1m">1 Mês</option>
+                <option value="3m">3 Meses</option>
+              </select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <Line data={movementsChartData} options={chartOptions} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Valor do Estoque por Período */}
+        <Card>
+          <CardHeader>
             <CardTitle>
-              Movimentações - {
+              Valor Total do Estoque - {
                 selectedPeriod === '7d' ? 'Últimos 7 Dias' :
                 selectedPeriod === '1m' ? 'Último Mês' :
                 'Últimos 3 Meses'
               }
             </CardTitle>
-            <select 
-              value={selectedPeriod} 
-              onChange={(e) => setSelectedPeriod(e.target.value as PeriodOption)}
-              className="px-3 py-1 text-sm border rounded-md bg-background"
-            >
-              <option value="7d">7 Dias</option>
-              <option value="1m">1 Mês</option>
-              <option value="3m">3 Meses</option>
-            </select>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <Line data={movementsChartData} options={chartOptions} />
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <Line data={stockValueChartData} options={{
+                ...chartOptions,
+                plugins: {
+                  ...chartOptions.plugins,
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        const value = context.parsed.y
+                        return `Valor: R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function(value) {
+                        return 'R$ ' + Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 0 })
+                      }
+                    }
+                  }
+                }
+              }} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
