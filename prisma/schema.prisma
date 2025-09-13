@@ -133,3 +133,18 @@ model ProjectMaterial {
 
   @@unique([projectId, materialId]) // Unique constraint to ensure no duplicates
 }
+
+model UserNotificationSettings {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  projectId       String   @db.ObjectId
+  criticalOnly    Boolean  @default(true)
+  lowStock        Boolean  @default(true)
+  movementAlerts  Boolean  @default(false)
+  aiDetection     Boolean  @default(false)
+  generalUpdates  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, projectId]) // Unique constraint to ensure one setting per user per project
+}

@@ -66,6 +66,22 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
 
   // Buscar eventos reais do sistema
   useEffect(() => {
+    // Carregar configurações salvas
+    const loadSavedSettings = () => {
+      try {
+        const savedSettings = localStorage.getItem('notificationSettings')
+        if (savedSettings) {
+          const parsedSettings = JSON.parse(savedSettings)
+          console.log('📥 Configurações carregadas:', parsedSettings)
+          setSettings(parsedSettings)
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar configurações:', error)
+      }
+    }
+
+    loadSavedSettings()
+
     const fetchRealEvents = async () => {
       try {
         setIsLoading(true)
@@ -109,17 +125,42 @@ export function DataManagement({ projectId, userEmail }: DataManagementProps) {
   const saveSettings = async () => {
     setIsLoading(true)
     try {
-      // Simular salvamento
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('💾 Salvando configurações:', settings)
       
-      toast({
-        title: "Configurações salvas",
-        description: "Suas preferências de notificação foram atualizadas com sucesso.",
+      // Salvar no localStorage para persistência local
+      localStorage.setItem('notificationSettings', JSON.stringify(settings))
+      
+      // Salvar no servidor via API
+      const response = await fetch('/api/notifications/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settings,
+          userId: userEmail, // Usar email como identificador
+          projectId: projectId || 'default'
+        })
       })
+      
+      if (response.ok) {
+        console.log('✅ Configurações salvas com sucesso')
+        toast({
+          title: "Configurações salvas",
+          description: "Suas preferências de notificação foram atualizadas com sucesso.",
+        })
+      } else {
+        console.warn('⚠️ Erro ao salvar no servidor, mas salvando localmente')
+        toast({
+          title: "Configurações salvas localmente",
+          description: "Suas preferências foram salvas, mas pode haver problemas de sincronização.",
+        })
+      }
     } catch (error) {
+      console.error('❌ Erro ao salvar configurações:', error)
+      // Mesmo com erro, salvar localmente
+      localStorage.setItem('notificationSettings', JSON.stringify(settings))
       toast({
-        title: "Erro",
-        description: "Não foi possível salvar as configurações. Tente novamente.",
+        title: "Configurações salvas localmente",
+        description: "Suas preferências foram salvas localmente. Verifique sua conexão.",
         variant: "destructive",
       })
     } finally {
