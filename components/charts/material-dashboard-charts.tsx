@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -37,7 +37,11 @@ interface MaterialDashboardChartsProps {
   movements: MovementRecord[]
 }
 
+type PeriodOption = '7d' | '1m' | '3m'
+
 export function MaterialDashboardCharts({ materials, movements }: MaterialDashboardChartsProps) {
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>('7d')
+  
   // Validar dados de entrada
   const safeMaterials = materials || []
   const safeMovements = movements || []
@@ -71,25 +75,81 @@ export function MaterialDashboardCharts({ materials, movements }: MaterialDashbo
   const categoryLabels = Object.keys(categoryData)
   const categoryValues = Object.values(categoryData)
 
-  // Dados para gráfico de movimentações por mês (últimos 6 meses)
-  const last6Months = Array.from({ length: 6 }, (_, i) => {
-    const date = new Date()
-    date.setMonth(date.getMonth() - i)
-    return date.toISOString().slice(0, 7) // YYYY-MM
-  }).reverse()
+  // Função para obter dados baseado no período selecionado
+  const getPeriodData = () => {
+    const now = new Date()
+    let periods: string[] = []
+    let labels: string[] = []
+    
+    switch (selectedPeriod) {
+      case '7d':
+        periods = Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(now)
+          date.setDate(date.getDate() - i)
+          return date.toISOString().slice(0, 10) // YYYY-MM-DD
+        }).reverse()
+        labels = periods.map(date => {
+          const d = new Date(date)
+          return `${d.getDate()}/${d.getMonth() + 1}`
+        })
+        break
+        
+      case '1m':
+        periods = Array.from({ length: 4 }, (_, i) => {
+          const date = new Date(now)
+          date.setDate(date.getDate() - (i * 7))
+          return date.toISOString().slice(0, 10)
+        }).reverse()
+        labels = periods.map((_, i) => `Semana ${4 - i}`)
+        break
+        
+      case '3m':
+        periods = Array.from({ length: 3 }, (_, i) => {
+          const date = new Date(now)
+          date.setMonth(date.getMonth() - i)
+          return date.toISOString().slice(0, 7) // YYYY-MM
+        }).reverse()
+        labels = periods.map(month => {
+          const [year, monthNum] = month.split('-')
+          const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+          return `${monthNames[parseInt(monthNum) - 1]} ${year}`
+        })
+        break
+    }
+    
+    return { periods, labels }
+  }
 
-  const monthlyMovements = last6Months.map(month => {
-    const monthMovements = safeMovements.filter(movement => {
+  const { periods, labels } = getPeriodData()
+
+  // Dados para gráfico de movimentações baseado no período selecionado
+  const periodMovements = periods.map(period => {
+    const periodMovements = safeMovements.filter(movement => {
       if (!movement.timestamp) return false
       try {
-        const movementDate = new Date(movement.timestamp).toISOString().slice(0, 7)
-        return movementDate === month
+        const movementDate = new Date(movement.timestamp)
+        
+        if (selectedPeriod === '7d') {
+          // Comparar por dia
+          const movementDateStr = movementDate.toISOString().slice(0, 10)
+          return movementDateStr === period
+        } else if (selectedPeriod === '1m') {
+          // Comparar por semana (aproximado)
+          const periodDate = new Date(period)
+          const weekStart = new Date(periodDate)
+          weekStart.setDate(weekStart.getDate() - 7)
+          return movementDate >= weekStart && movementDate <= periodDate
+        } else {
+          // Comparar por mês
+          const movementMonth = movementDate.toISOString().slice(0, 7)
+          return movementMonth === period
+        }
       } catch (error) {
         console.warn('Data inválida encontrada:', movement.timestamp)
         return false
       }
     })
-    return monthMovements.length
+    return periodMovements.length
   })
 
   // Dados para gráfico de status de estoque
@@ -149,15 +209,11 @@ export function MaterialDashboardCharts({ materials, movements }: MaterialDashbo
   }
 
   const movementsChartData = {
-    labels: last6Months.map(month => {
-      const [year, monthNum] = month.split('-')
-      const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-      return `${monthNames[parseInt(monthNum) - 1]} ${year}`
-    }),
+    labels: labels,
     datasets: [
       {
         label: 'Movimentações',
-        data: monthlyMovements,
+        data: periodMovements,
         borderColor: 'rgba(59, 130, 246, 1)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.4,
@@ -276,10 +332,27 @@ export function MaterialDashboardCharts({ materials, movements }: MaterialDashbo
         </Card>
       </div>
 
-      {/* Movimentações por Mês */}
+      {/* Movimentações por Período */}
       <Card>
         <CardHeader>
-          <CardTitle>Movimentações dos Últimos 6 Meses</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              Movimentações - {
+                selectedPeriod === '7d' ? 'Últimos 7 Dias' :
+                selectedPeriod === '1m' ? 'Último Mês' :
+                'Últimos 3 Meses'
+              }
+            </CardTitle>
+            <select 
+              value={selectedPeriod} 
+              onChange={(e) => setSelectedPeriod(e.target.value as PeriodOption)}
+              className="px-3 py-1 text-sm border rounded-md bg-background"
+            >
+              <option value="7d">7 Dias</option>
+              <option value="1m">1 Mês</option>
+              <option value="3m">3 Meses</option>
+            </select>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-80">
