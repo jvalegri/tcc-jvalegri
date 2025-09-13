@@ -117,10 +117,9 @@ export async function POST(request: NextRequest) {
       // Verificar se o material foi criado com estoque baixo
       await checkAndEmitLowStockEvent(
         newMaterial.id,
+        projectId,
         newMaterial.currentQuantity,
-        newMaterial.minStock,
-        'material_created',
-        projectId
+        newMaterial.minStock
       )
 
       // Retornar material criado no formato esperado pelo frontend
@@ -207,7 +206,8 @@ export async function PUT(request: NextRequest) {
         existingMaterial.currentQuantity,
         existingMaterial.minStock,
         updatedMaterial.currentQuantity,
-        updatedMaterial.minStock
+        updatedMaterial.minStock,
+        projectId
       )
 
       // Retornar material atualizado no formato esperado pelo frontend
