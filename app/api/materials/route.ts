@@ -173,9 +173,16 @@ export async function PUT(request: NextRequest) {
     const prisma = new PrismaClient()
 
     try {
-      // Verificar se o material existe
+      // Verificar se o material existe e buscar o projeto
       const existingMaterial = await prisma.material.findUnique({
-        where: { id: id }
+        where: { id: id },
+        include: {
+          projects: {
+            select: {
+              projectId: true
+            }
+          }
+        }
       })
 
       if (!existingMaterial) {
@@ -184,6 +191,9 @@ export async function PUT(request: NextRequest) {
           { status: 404 }
         )
       }
+
+      // Obter o projectId do primeiro projeto associado
+      const projectId = existingMaterial.projects[0]?.projectId
 
       // Atualizar material
       const updatedMaterial = await prisma.material.update({
@@ -201,14 +211,18 @@ export async function PUT(request: NextRequest) {
       })
 
       // Verificar se o material mudou para status de estoque baixo
-      await checkMaterialStatusChange(
-        id,
-        existingMaterial.currentQuantity,
-        existingMaterial.minStock,
-        updatedMaterial.currentQuantity,
-        updatedMaterial.minStock,
-        projectId
-      )
+      if (projectId) {
+        await checkMaterialStatusChange(
+          id,
+          existingMaterial.currentQuantity,
+          existingMaterial.minStock,
+          updatedMaterial.currentQuantity,
+          updatedMaterial.minStock,
+          projectId
+        )
+      } else {
+        console.warn('⚠️ ProjectId não encontrado para material:', id)
+      }
 
       // Retornar material atualizado no formato esperado pelo frontend
       const materialResponse = {
