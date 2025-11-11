@@ -43,19 +43,18 @@ export function QRScanner() {
     try {
       const cameras = await Html5Qrcode.getCameras()
       
-      // Priorizar câmera traseira no mobile
-      let cameraId = cameras[0]?.id
-      
-      // Se há múltiplas câmeras, tentar encontrar a traseira
-      if (cameras.length > 1) {
-        const backCamera = cameras.find(camera => 
-          camera.label.toLowerCase().includes('back') || 
-          camera.label.toLowerCase().includes('rear') ||
-          camera.label.toLowerCase().includes('environment')
-        )
-        if (backCamera) {
-          cameraId = backCamera.id
-        }
+      // Procurar pela câmera traseira
+      let cameraId = cameras.find(camera => 
+        camera.label.toLowerCase().includes('back') || 
+        camera.label.toLowerCase().includes('rear') ||
+        camera.label.toLowerCase().includes('traseira') ||
+        camera.label.toLowerCase().includes('trás') ||
+        camera.label.toLowerCase().includes('environment')
+      )?.id
+
+      // Se não encontrar pela label, usar a última câmera (geralmente é a traseira)
+      if (!cameraId && cameras.length > 0) {
+        cameraId = cameras[cameras.length - 1].id
       }
       
       if (!cameraId) {
