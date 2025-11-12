@@ -446,6 +446,9 @@ export function MaterialDashboardCharts({ materials, movements }: MaterialDashbo
                     callbacks: {
                       label: function(context) {
                         const value = context.parsed.y
+                        if (value === null || value === undefined) {
+                          return 'Valor: R$ 0,00'
+                        }
                         return `Valor: R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                       }
                     }
