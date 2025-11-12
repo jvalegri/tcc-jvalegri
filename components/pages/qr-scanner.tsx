@@ -117,23 +117,56 @@ export function QRScanner() {
     })
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
+    if (!file) return
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Arquivo inválido",
+        description: "Por favor, selecione uma imagem válida.",
+        variant: "destructive",
+      })
+      // Resetar input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+      return
+    }
+
+    try {
+      // Criar scanner temporário para a imagem
       const scanner = new Html5Qrcode("image-scan")
-      scanner
-        .scanFile(file, true)
-        .then((decodedText) => {
-          handleScanCode(decodedText)
-          setTimeout(() => setScannedCode(""), 500)
-        })
-        .catch(() => {
-          toast({
-            title: "QR Code não detectado",
-            description: "Não foi possível ler um código QR da imagem.",
-            variant: "destructive",
-          })
-        })
+      
+      // Escanear o arquivo
+      const decodedText = await scanner.scanFile(file, true)
+      
+      // Limpar scanner após uso
+      try {
+        scanner.clear()
+      } catch (error) {
+        // Ignorar erros ao limpar scanner
+      }
+      
+      // Processar código escaneado
+      handleScanCode(decodedText)
+      
+      // Resetar input para permitir novo upload
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error("Erro ao escanear imagem:", error)
+      toast({
+        title: "QR Code não detectado",
+        description: "Não foi possível ler um código QR da imagem. Verifique se a imagem contém um QR code válido e tente novamente.",
+        variant: "destructive",
+      })
+      // Resetar input mesmo em caso de erro
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -301,7 +334,7 @@ export function QRScanner() {
             >
               Selecionar Imagem
             </Button>
-            <div id="image-scan" className="hidden" />
+            <div id="image-scan" style={{ display: 'none' }} />
             <p className="text-sm text-muted-foreground mt-2">
               Faça upload de uma imagem contendo o código QR
             </p>
